@@ -1,0 +1,304 @@
+---
+title: "drop-cases"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+gee_long_all_bx <- readRDS("../artifacts/gee_long_all_bx.rds")
+gee_long_non <- readRDS("../artifacts/gee_long_non.rds")
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+combined_data <- readRDS("../artifacts/combined_data.rds")
+source("../_common.R")
+```
+
+```{r}
+library(glmtoolbox)
+library(geepack)
+library(dplyr)
+library(tidyr)
+```
+
+# Drop Cases
+
+## Outliers
+
+```{r}
+# Variables of interest
+vars <- c(
+  "Q14.1", "Sex", "SES_mean", "hispanic",
+  "NeedCog_Mean", "DirtyDozen_Narcissism",
+  "DirtyDozen_Psychopathy", "DirtyDozen_Machiavellianism",
+  "SVO_angle"
+)
+
+# Use your dataframe
+df <- filtered_data
+
+# Keep only variables that exist in df
+vars_present <- intersect(vars, names(df))
+
+# Among those, keep only numeric columns for z-scoring
+numeric_vars <- vars_present[sapply(df[vars_present], is.numeric)]
+non_numeric  <- setdiff(vars_present, numeric_vars)
+
+# 1) Add z-score columns for all numeric vars (prefix z_)
+df_z <- df %>%
+  mutate(across(all_of(numeric_vars),
+                ~ as.numeric(scale(., center = TRUE, scale = TRUE)),
+                .names = "z_{col}"))
+
+# 2) Long-form check for |z| > 3 with ResponseId + raw value + z
+outliers_3sd <- df %>%
+  dplyr::select(ResponseId, all_of(numeric_vars)) %>%
+  pivot_longer(cols = all_of(numeric_vars),
+               names_to = "variable", values_to = "value") %>%
+  group_by(variable) %>%
+  mutate(
+    v_mean = mean(value, na.rm = TRUE),
+    v_sd   = sd(value,   na.rm = TRUE),
+    z = ifelse(v_sd > 0, (value - v_mean) / v_sd, NA_real_)
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(z), abs(z) > 3) %>%
+  arrange(variable, desc(abs(z))) %>%
+  dplyr::select(ResponseId, variable, value, z)
+
+# Review outputs
+# non_numeric   # variables skipped from z-scoring (e.g., Sex, hispanic)
+outliers_3sd  # ResponseId, variable, raw score, and z-score beyond |3|
+
+```
+
+#### Save file
+
+```{r}
+# Save tibble for record keeping
+
+# Save the tibble to an .RDS file
+saveRDS(outliers_3sd, "../data/outliers/outliers_3sd.rds")
+
+# Save multiple objects into one RData file
+save(outliers_3sd, file = "../data/outliers/outliers_3sd.RData")
+
+# CSV (widely compatible, but labels may be lost)
+write.csv(outliers_3sd, "../data/outliers/outliers_3sd.csv", row.names = FALSE)
+```
+
+All of the outliers were within the possible ranges for the scales.
+
+## Information Sharing
+
+Find the cases that are over influencing the model
+
+#### control model
+
+```{r}
+# 1) Write your formula (drop Behavior if you're on shared-only data)
+form_controls <- Count ~ InfoType + InfoImportance +
+  Q14.1 + Sex + SES_mean + hispanic +
+  NeedCog_Mean + 
+  DirtyDozen_Narcissism +
+  DirtyDozen_Psychopathy +
+  DirtyDozen_Machiavellianism +
+  SVO_angle
+```
+
+```{r}
+# 2) Build a complete-cases analysis data set for exactly these vars + id
+vars_needed <- c("ResponseId", all.vars(form_controls))
+
+dat <- gee_long_shared %>%
+  # make sure there are no character columns sneaking in
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+```{r}
+# 3) Fit the GEE on the filtered data
+gee_model_controls <- glmgee(
+  form_controls,
+  id     = ResponseId,          
+  family = poisson(link = "log"),
+  data   = dat,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+# summary(gee_model_controls)
+```
+
+```{r}
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  gee_model_controls,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(gee_model_controls$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+gee_model_controls_outliers <- subset(cooks_table, Flag)
+
+gee_model_controls_outliers
+```
+
+###### Save file
+
+```{r}
+# Save tibble for record keeping
+
+# Save the tibble to an .RDS file
+saveRDS(gee_model_controls_outliers, "../data/outliers/gee_model_controls_outliers.rds")
+
+# Save multiple objects into one RData file
+save(gee_model_controls_outliers, file = "../data/outliers/gee_model_controls_outliers.RData")
+
+# CSV (widely compatible, but labels may be lost)
+write.csv(gee_model_controls_outliers, "../data/outliers/gee_model_controls_outliers.csv", row.names = FALSE)
+```
+
+#### actual model
+
+```{r}
+# 1) Complete-case data just like you had
+vars_needed <- c("ResponseId", all.vars(form_full))
+
+# 2) Refit with glmtoolbox::glmgee (so diagnostics methods are available)
+fit_glt <- glmgee(
+  formula = form_full,
+  id      = ResponseId,
+  family  = poisson(link = "log"),
+  data    = dat_full,
+  corstr  = "Exchangeable"
+)
+summary(fit_glt)
+```
+
+```{r}
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  fit_glt,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(fit_glt$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+gee_model_outliers <- subset(cooks_table, Flag)
+```
+
+###### Save file
+
+```{r}
+# Save tibble for record keeping
+
+# Save the tibble to an .RDS file
+saveRDS(gee_model_outliers, "../data/outliers/gee_model_outliers.rds")
+
+# Save multiple objects into one RData file
+save(gee_model_outliers, file = "../data/outliers/gee_model_outliers.RData")
+
+# CSV (widely compatible, but labels may be lost)
+write.csv(gee_model_outliers, "../data/outliers/gee_model_outliers.csv", row.names = FALSE)
+```
+
+## Cooperation
+
+Find the cases that are over influencing the model
+
+#### control model
+
+```{r}
+# Basic linear regression
+state_model_controls <- lm(Manipulation_Mean ~ 
+  Q14.1 + sex + SES_mean + hispanic +
+  NeedCog_Mean + DirtyDozen_Narcissism +
+  DirtyDozen_Psychopathy + DirtyDozen_Machiavellianism +
+  SVO_angle, data = filtered_data)
+
+# Summary of results
+summary(state_model_controls)
+```
+
+```{r}
+# Calculate Cook's distance
+cooks_d <- cooks.distance(state_model_controls)
+
+# Set cutoff
+cutoff <- 4 / nrow(filtered_data)
+
+# Flag cases that exceed cutoff
+outlier_idx <- which(cooks_d > cutoff)
+
+# Pull out ResponseId and Cook's D for those cases
+outliers <- data.frame(
+  ResponseId = filtered_data$ResponseId[outlier_idx],
+  CooksD     = cooks_d[outlier_idx]
+)
+
+outliers
+
+```
+
+```{r}
+# Save tibble for record keeping
+
+# Save the tibble to an .RDS file
+saveRDS(outliers, "../data/outliers/cooperation_outliers.rds")
+
+# Save multiple objects into one RData file
+save(outliers, file = "../data/outliers/cooperation_outliers.RData")
+
+# CSV (widely compatible, but labels may be lost)
+write.csv(outliers, "../data/outliers/cooperation_outliers.csv", row.names = FALSE)
+```
+
+Outliers saved.
+
+# Outliers
+
+List of the outliers were compiled. A count of the flags was created. All outliers will be removed.
+
+```{r}
+# Base R
+cases_to_drop <- read.csv("../data/outliers/outliers_list.csv")
+```
+
+```{r}
+View(cases_to_drop)
+```

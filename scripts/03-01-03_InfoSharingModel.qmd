@@ -1,0 +1,343 @@
+---
+title: "informationSharingModelSelection"
+format: html
+---
+
+```{r}
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+# filtered_data <- readRDS("../artifacts/filtered_data.rds")
+source("../_common.R")
+```
+
+```{r}
+library(glmtoolbox)
+library(geepack)
+library(VGAM)
+library(COMPoissonReg)
+library("glmmTMB")
+library(ggeffects)
+```
+
+## ---- INFORMATION SHARING TASK ----
+
+SELECTING THE MODEL
+
+test out multiple models to see which model has the lowest QIC
+
+if needed -\> run each individually
+
+## Structure
+
+```{r}
+form_full <- Count ~ (structure_number01 * motivation_number01 *
+  InfoType * InfoImportance) +
+  Q14.1 + Sex + SES_mean + hispanic +
+  NeedCog_Mean + 
+  DirtyDozen_Narcissism +
+  DirtyDozen_Psychopathy +
+  DirtyDozen_Machiavellianism +
+  SVO_angle
+```
+
+```{r}
+# 2) Build complete-cases dataset for these vars + id
+vars_needed <- c("ResponseId", all.vars(form_full))
+
+dat_full <- gee_long_shared %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+```{r}
+dat_full <- dat_full %>%
+  mutate(
+    ResponseId = factor(ResponseId),
+    SES_mean_c = scale(SES_mean, scale = FALSE),
+    NeedCog_Mean_c = scale(NeedCog_Mean, scale = FALSE),
+    SVO_angle_c = scale(SVO_angle, scale = FALSE),
+    Q14.1_c = scale(Q14.1, scale = FALSE)
+  )
+```
+
+## Model
+
+------------------------------------------------------------------------
+
+### ❌Poisson regression
+
+Used for modeling count data where the counts follow a **Poisson distribution** — that is, the variance equals the mean.
+
+**When it works best:**
+
+-   When the variance ≈ mean.
+
+-   Example: Number of customer complaints per day, if variability is modest.
+
+```{r}
+model_poisson <- glmgee(
+  form_full,
+  id     = ResponseId,          
+  family = poisson(link = "log"),
+  data   = dat_full,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(model_poisson)
+```
+
+------------------------------------------------------------------------
+
+### ❌generalized Poisson regression
+
+A more flexible version of Poisson regression that directly **models dispersion** (both overdispersion and underdispersion).
+
+-   When θ=0\theta = 0θ=0, it reduces to standard Poisson regression.
+
+<!-- -->
+
+-   When θ\>0\theta \> 0θ\>0, variance \> mean (overdispersed).
+
+-   When θ\<0\theta \< 0θ\<0, variance \< mean (underdispersed).
+
+**When to use:**
+
+-   When you detect dispersion in your data but still want a Poisson-like structure.
+
+-   Slightly more complex estimation, but interprets similarly (log link, exponentiated coefficients = rate ratios).
+
+```{r}
+# Fit the Generalized Poisson model
+model_genpoisson <- vglm(form_full,
+                     family = genpoisson(),
+                     data = dat_full)
+```
+
+**`genpoisson()` isn’t exported in current VGAM builds**. Use one of VGAM’s supported GP families instead:
+
+-   `genpoisson1()` — GP-1 parameterization (variance linear in mean; **overdispersion only**). [[R Project Search+1]{.underline}](https://search.r-project.org/CRAN/refmans/VGAM/html/genpoisson1.html?utm_source=chatgpt.com){alt="https://search.r-project.org/CRAN/refmans/VGAM/html/genpoisson1.html?utm_source=chatgpt.com"}
+
+-   `genpoisson2()` — GP-2 parameterization (variance a cubic function of the mean; **overdispersion only**).
+
+Therefore, moving to Conway-Maxwell Poisson (COM-Poisson) Regression.
+
+### ❌COM-Poisson
+
+Easiest fix: COM-Poisson (handles under- and overdispersion)
+
+NOT appropriate for repeated measures, or grouped data... FAIL.
+
+```{r}
+model_COM <- glm.cmp(formula.lambda = form_full,
+                   data = dat_full) 
+
+summary(model_COM)
+```
+
+#### 1️⃣ Dispersion (`nu`)
+
+| Parameter | Estimate | SE     | Interpretation              |
+|-----------|----------|--------|-----------------------------|
+| **nu**    | 1.62     | 0.1402 | `> 1` → **Underdispersion** |
+
+```{r}
+equitest(model_COM)
+```
+
+H₀: ν = 1 (no dispersion).\
+
+If p \< .05 → reject → model has significant dispersion (here underdispersion).
+
+#### 2️⃣ Model Fit
+
+| Metric     | Value    | Meaning                                        |
+|------------|----------|------------------------------------------------|
+| **logLik** | −609.622 | Used for comparisons (higher = better)         |
+| **AIC**    | 1253.244 | Model fit penalty-adjusted; compare to Poisson |
+| **BIC**    | 1321.601 | Stricter penalty for more parameters           |
+
+#### 3️⃣ Coefficients
+
+```{r}
+# Incidence-rate ratios
+exp(coef(model_COM))  # or coef(fit_cmp, type = "list") for beta/gamma
+```
+
+These are log-rate estimates (on the log link scale).\
+
+Exponentiating gives **Incidence Rate Ratios (IRRs):**
+
+| Predictor | Estimate | IRR (exp β) | Interpretation |
+|----|----|----|----|
+| structure_number01 | 0.2352 | 1.27 | +27 % change in expected count |
+| motivation_number01 | 0.5439 | 1.72 | +72 % change |
+| InfoType (private) | −0.2137 | 0.81 | −19 % change |
+| InfoImportance (more) | −0.4547 | 0.63 | −37 % change |
+| Sex1 | −0.2605 | 0.77 | −23 % change |
+| NeedCog_Mean | 0.3138 | 1.37 | +37 % change |
+| structure×motivation interaction | −0.4416 | 0.64 | the effect of motivation depends on structure |
+
+Everything else has p \> .05 → not significant at typical α = .05.
+
+#### 4️⃣ Significance Tests
+
+Highlight key ones:
+
+-   Motivation_number01 (p \< .001)
+
+-   InfoImportance_more (p \< .001)
+
+-   Sex1 (p = .022)
+
+-   NeedCog_Mean (p \< .001)
+
+-   Structure × Motivation interaction (p = .018)
+
+```{r}
+# Predicted counts
+pred <- predict(model_COM, type = "response")
+
+# Test equidispersion (H0: nu = 1). nu > 1 → underdispersion
+COMPoissonReg::equitest(model_COM)
+```
+
+------------------------------------------------------------------------
+
+### ✅Mixed-effects COM-Poisson
+
+**Conway–Maxwell–Poisson mixed model** with:
+
+-   **Count** outcome
+
+-   All main effects and interactions up to 4-way (structure × motivation × info type × info importance)
+
+-   **Random intercept for ResponseId** (accounting for repeated measures)
+
+This model handles **underdispersion** *and* the non-independence of repeated responses per person
+
+to run this, the form must have repeated measures
+
+```{r}
+form_mixed <- update(form_full, . ~ . + (1 | ResponseId))
+```
+
+```{r}
+model_mixedCOM <- glmmTMB(form_mixed,
+               family = compois(),
+               data = dat_full
+)
+
+summary(model_mixedCOM)
+```
+
+#### 2️⃣ Check dispersion and random effects
+
+##### Dispersion:
+
+-   This parameter is **ν = 0.591**, which is **\< 1** → indicates *overdispersion*, not underdispersion.
+
+-   Wait, earlier you had underdispersion (ν \> 1). That changed because of:
+
+```         
+-    different model structure (more predictors), and/or
+
+-    the addition of random effects, which absorb some variability.
+```
+
+<!-- -->
+
+-   So this model sees the data as slightly overdispersed, not underdispersed.\
+    (Still fine — the COM-Poisson flexibly adjusts either way.)
+
+##### Random effect (ResponseId):
+
+Variance = 1.31e-09 (≈ 0)
+
+That’s *basically zero*, meaning that after all those fixed effects and interactions, there’s almost no leftover between-person variability.
+
+✅ Interpretation:\
+The predictors (and their interactions) explain nearly all the stable differences across participants, so adding `(1|ResponseId)` didn’t change much.\
+That’s common when participants contribute only a few observations or when predictors are person-level.
+
+#### 3️⃣ Key significant results (p \< .05)
+
+| Term | Interpretation (log-count scale) | Approx IRR (exp(Estimate)) |
+|----|----|----|
+| InfoImportancemore | More important info → lower counts | 0.43 |
+| Sex1 | One sex had lower counts | 0.78 |
+| NeedCog_Mean | Higher Need for Cognition → higher counts | 1.23 |
+| structure_number01:InfoImportancemore | Structure × Importance interaction | 1.95 |
+| motivation_number01:InfoImportancemore | Motivation × Importance interaction | 2.58 |
+| InfoTypeprivate:InfoImportancemore | Private × Important interaction | 1.78 |
+| structure_number01:motivation_number01:InfoImportancemore | 3-way interaction | 0.27 |
+| structure_number01:InfoTypeprivate:InfoImportancemore | 3-way interaction | 0.34 |
+| motivation_number01:InfoTypeprivate:InfoImportancemore | 3-way interaction | 0.49 |
+| structure_number01:motivation_number01:InfoTypeprivate:InfoImportancemore | 4-way interaction | 3.69 |
+
+> IRRs (exp(Estimate)) approximate how much the expected count multiplies by for a one-unit increase or level change.
+
+#### 4️⃣ Conceptually
+
+-   **Main effects** show the average effect *when other factors are at their reference levels*.
+
+-   **Interaction terms** show that those effects *depend* on combinations of structure, motivation, type, and importance.
+
+The significant 3-way and 4-way interactions tell you that **the effect of one factor depends on the specific combination of the others**.
+
+You’d likely want to visualize these interactions (e.g., plot predicted counts by combinations of InfoType and InfoImportance for each structure × motivation condition).
+
+#### 5️⃣ What to do next
+
+##### Plot or interpret interactions
+
+use `ggeffects` or `emmeans` to visualize predicted counts:
+
+```{r}
+# library(ggeffects)
+ggpredict(model_mixedCOM, 
+          bias_correction = TRUE,
+          terms = c("InfoType", 
+                    "InfoImportance", 
+                    "structure_number01", 
+                    "motivation_number01"))
+```
+
+### ❌quasi-Poisson regression
+
+Used when there’s **overdispersion** (variance \> mean), but you don’t want to change the underlying Poisson structure.
+
+Corrects the standard errors (so inference is valid) but doesn’t change predicted means.
+
+**When to use:**
+
+-   When overdispersion is present but not extreme
+
+-   Easy to implement and interpret (same model coefficients as Poisson, but robust standard errors).
+
+------------------------------------------------------------------------
+
+### ❌negative binominal regression
+
+A full model that accounts for **overdispersion** by assuming that the Poisson rate (λ\lambdaλ) itself varies across observations.
+
+Adds a **gamma-distributed random effect** to the Poisson mean.
+
+When α=0\alpha = 0α=0, it reduces to a standard Poisson model.
+
+**When to use:**
+
+-   When overdispersion is substantial.
+
+-   Very common alternative to Poisson in practice.
+
+-   Interpretation is similar: coefficients describe changes in the expected log count.
+
+------------------------------------------------------------------------
+
+## Correlation Structure
+
+independent: not allowing responses within subjects to be correlated. 
+
+exchangable: pairs of responses within a subject are equally correlated

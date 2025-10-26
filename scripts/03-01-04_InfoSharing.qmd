@@ -1,0 +1,949 @@
+---
+title: "informationSharing"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+gee_long_all_bx <- readRDS("../artifacts/gee_long_all_bx.rds")
+gee_long_non <- readRDS("../artifacts/gee_long_non.rds")
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+combined_data <- readRDS("../artifacts/combined_data.rds")
+source("../_common.R")
+```
+
+```{r}
+#| message: false
+#| warning: false
+# Libraries
+library(glmtoolbox)
+library(geepack)
+```
+
+## ---- INFORMATION SHARING TASK ----
+
+Based on previous analysis, only shared model will be used.
+
+## ✅ shared model with controls
+
+```{r}
+# 1) Write your full model formula
+form_full <- Count ~ structure_number01 + motivation_number01 +
+  InfoType + InfoImportance +
+  Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Mean
+
+# 2) Build complete-cases dataset for these vars + id
+vars_needed <- c("ResponseId", all.vars(form_full))
+
+dat_full <- gee_long_shared %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+
+```
+
+#### model creation
+
+```{r}
+# 3) Fit the GEE on the filtered data
+gee_model_full_exc <- glmgee(
+  form_full,
+  id     = ResponseId,
+  family = poisson(link = "log"),
+  data   = dat_full,
+  corstr = "exchangeable",
+  na.action = na.omit
+)
+
+# summary(gee_model_full_exc) 
+```
+
+```{r}
+# 3) Fit the GEE on the filtered data
+gee_model_full_ind <- glmgee(
+  form_full,
+  id     = ResponseId,
+  family = poisson(link = "log"),
+  data   = dat_full,
+  corstr = "independence",
+  na.action = na.omit
+)
+
+# summary(gee_model_full_ind)
+```
+
+```{r}
+# # 3) Fit the GEE on the filtered data
+# gee_model_full_ar1 <- glmgee(
+#   form_full,
+#   id     = ResponseId,
+#   family = poisson(link = "log"),
+#   data   = dat_full,
+#   corstr = "ar1",
+#   na.action = na.omit
+# )
+# 
+# # summary(gee_model_full_ar1)
+```
+
+#### model comparison QIC
+
+```{r}
+# # Example: compare your models
+# QIC_ind <- geepack::QIC(gee_model_full_ind)
+# QIC_exc <- geepack::QIC(gee_model_full_exc)
+# # QIC_ar1 <- geepack::QIC(gee_model_full_ar1)
+# 
+# # Build a comparison table
+# qic_tbl <- data.frame(
+#   model = c("independence", "exchangeable", "ar1"),
+#   QIC   = c(as.numeric(QIC_ind[["QIC"]]),
+#             as.numeric(QIC_exc[["QIC"]]),
+#             # as.numeric(QIC_ar1[["QIC"]])),
+#   QICu  = c(as.numeric(QIC_ind[["QICu"]]),
+#             as.numeric(QIC_exc[["QICu"]])
+#             # as.numeric(QIC_ar1[["QICu"]]))
+# )
+# 
+# # Order by lowest QIC
+# qic_tbl[order(qic_tbl$QIC), ]
+```
+
+#### selected model
+
+```{r}
+gee_model_full <- gee_model_full_exc
+```
+
+```{r}
+summary(gee_model_full)
+```
+
+##### leverage
+
+```{r}
+# 1) Complete-case data just like you had
+vars_needed <- c("ResponseId", all.vars(form_full))
+# dat_full <- gee_long_shared %>%
+#   mutate(across(where(is.character), factor)) %>%
+#   select(all_of(vars_needed)) %>%
+#   filter(complete.cases(.)) %>%
+#   droplevels()
+
+# 2) Refit with glmtoolbox::glmgee (so diagnostics methods are available)
+fit_glt <- glmgee(
+  formula = form_full,
+  id      = ResponseId,
+  family  = poisson(link = "log"),
+  data    = dat_full,
+  corstr  = "Exchangeable"
+)
+summary(fit_glt)
+```
+
+##### cook's distance
+
+Cook's D is a commonly used estimate of the influence of a data point when performing a least-squares regression analysis
+
+```{r}
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  fit_glt,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(fit_glt$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+##### leverage
+
+In statistics, leverage is a measure of how far a data point's independent variable (or predictor) values are from the mean of all predictor values in a regression model. High leverage indicates a data point has extreme predictor values, giving it a greater potential to influence the regression line and model parameters, though high leverage doesn't automatically mean a point is influential. The leverage value, a diagonal element of the "hat matrix," quantifies the potential for a point to have a large impact on its own predicted value and the regression function. 
+
+```{r}
+# How many parameters and participants?
+p <- length(coef(fit_glt))
+cluster_ids <- unique(fit_glt$id)
+m <- length(cluster_ids)
+
+# Compute leverage per participant (cluster)
+lev_cl <- leverage(fit_glt, level = "clusters", plot.it = FALSE)  # vector
+lev_cl <- as.numeric(lev_cl)                                      # ensure numeric
+
+# Sanity check: 1:1 mapping
+stopifnot(length(lev_cl) == m)
+
+# Cutoff: 3× the average leverage (tweak if you prefer 2×, etc.)
+avg_lev_cl <- p / m
+cutoff_lev_cl <- 3 * avg_lev_cl
+
+# Table
+lev_cl_tbl <- data.frame(
+  ResponseId = cluster_ids,
+  Leverage   = lev_cl,
+  Avg        = rep(avg_lev_cl, m),
+  Cutoff     = rep(cutoff_lev_cl, m),
+  LevFlag    = lev_cl > cutoff_lev_cl,
+  stringsAsFactors = FALSE
+)
+
+# Who to review (high leverage participants)
+subset(lev_cl_tbl, LevFlag) |> 
+  (\(d) d[order(-d$Leverage), ])()
+
+```
+
+##### residuals
+
+```{r}
+# Observation-level Pearson residuals
+res_ob <- residuals(fit_glt, type = "pearson", level = "observations")
+
+# Cluster-level residuals (one value per participant)
+res_cl <- residuals(fit_glt, type = "pearson", level = "clusters")
+
+# Table with IDs + cluster residuals
+res_tbl <- data.frame(
+  ResponseId = unique(fit_glt$id),
+  PearsonRes = as.numeric(res_cl)
+)
+
+# Flag those with |residual| > 3 (common cutoff)
+res_tbl$Flag <- abs(res_tbl$PearsonRes) > 3
+
+subset(res_tbl, Flag)
+```
+
+##### IRR
+
+```{r}
+# # IRR for each predictor
+# IRR <- exp(coef(gee_model_full))
+# IRR_df <- data.frame(
+#   Predictor = names(IRR),
+#   IRR = round(IRR, 2)
+# )
+# 
+# print(IRR_df)
+```
+
+##### dispersion
+
+```{r}
+# 1) Get Pearson residuals and fitted values
+pearson_resid <- residuals(gee_model_full, type = "pearson")
+fitted_vals   <- fitted(gee_model_full)
+
+# (Optional) drop rows with NA residuals/fitted (can happen after filters)
+ok <- stats::complete.cases(pearson_resid, fitted_vals)
+pearson_resid <- pearson_resid[ok]
+fitted_vals   <- fitted_vals[ok]
+
+# 2) Pearson χ², df, dispersion
+pearson_chisq <- sum(pearson_resid^2)
+df_resid      <- gee_model_full$df.residual
+dispersion    <- pearson_chisq / df_resid
+
+cat("Pearson χ²(", df_resid, ") = ", round(pearson_chisq, 2),
+    ", Pearson χ²/df = ", round(dispersion, 3), "\n", sep = "")
+
+# 3) Plot fitted vs Pearson residuals
+plot(fitted_vals, pearson_resid,
+     xlab = "Fitted values", ylab = "Pearson residuals")
+abline(h = 0, lty = 2)
+
+```
+
+## model comparison with controls
+
+```{r}
+# Reuse your existing formula/data/id/family
+form_full <- Count ~ structure_number01 * motivation_number01 +
+  InfoType * InfoImportance +
+  Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism
+
+id_var  <- ~ ResponseId
+dat     <- gee_long_shared
+fam     <- poisson(link = "log")   # use whatever you used in gee_model_full
+
+# If you already fit one model (e.g., independence) call it gee_ind to reuse
+# gee_ind <- gee_model_full    # <- uncomment if gee_model_full is independence
+
+# Otherwise (re)fit the three:
+gee_ind <- geeglm(formula = form_full, id = ResponseId, data = dat,
+                  family = fam, corstr = "independence")
+gee_exc <- geeglm(formula = form_full, id = ResponseId, data = dat,
+                  family = fam, corstr = "exchangeable")
+gee_ar1 <- geeglm(formula = form_full, id = ResponseId, data = dat,
+                  family = fam, corstr = "ar1")
+
+# QIC table
+qic_tbl <- data.frame(
+  model = c("independence", "exchangeable", "ar1"),
+  QIC   = c(QIC(gee_ind), QIC(gee_exc), QIC(gee_ar1)),
+  QICu  = c(QICu(gee_ind), QICu(gee_exc), QICu(gee_ar1))
+)
+
+qic_tbl[order(qic_tbl$QIC), ]  # smaller is better
+```
+
+##### Compare addition to the model
+
+```{r}
+# Create the base model
+m1 <- geeglm(
+  Count ~ structure * motivation + InfoType + InfoImportance,
+  family = poisson(link = "log"),
+  data = gee_long_shared,
+  id = ResponseId,
+  corstr = "independence"
+)
+summary(m1)
+```
+
+```{r}
+# Add potential controls to the model
+# have not updated the variable names in this one
+
+# m_age <- update(m1, . ~ . + Q14.1)
+# m_gender <- update(m1, . ~ . + Q14.2)
+# m_exp <- update(m1, . ~ . + ExperienceLevel)
+# m_exp <- update(m1, . ~ . + ExperienceLevel)
+# m_exp <- update(m1, . ~ . + ExperienceLevel)
+# m_exp <- update(m1, . ~ . + ExperienceLevel)
+# m_exp <- update(m1, . ~ . + ExperienceLevel)
+```
+
+```{r}
+# Summaries
+# summary(m_age)$coefficients
+# summary(m_gender)$coefficients
+# summary(m_exp)$coefficients
+```
+
+# Dropping cases due to flags with leverage or cook's distance
+
+not that all cases were dropped in the cleaning data
+
+#### refit model, removing the drop cases
+
+```{r}
+form_full <- Count ~ structure_number01 * motivation_number01 +
+  InfoType * InfoImportance +
+  Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism
+
+# Poisson
+gee_model_full_exc_drops_P <- glmgee(
+  form_full,
+  id     = ResponseId,
+  family = poisson(link = "log"),
+  data   = gee_long_shared_drops,
+  corstr = "Exchangeable"
+)
+# summary(gee_model_full_exc_drops_P)
+QIC_drops_P <- glmtoolbox::QIC(gee_model_full_exc_drops_P)
+
+# Quasi-Poisson
+gee_model_full_exc_drops_Q <- glmgee(
+  form_full,
+  id     = ResponseId,
+  family = quasi(link = "log", variance = "mu"),
+  data   = gee_long_shared_drops,
+  corstr = "Exchangeable"
+)
+# summary(gee_model_full_exc_drops_Q)
+QIC_drops_Q <- glmtoolbox::QIC(gee_model_full_exc_drops_Q)
+
+# # Negative Binominal
+# nb_drops <- MASS::glm.nb(form_full, data = gee_long_shared_drops)
+# theta_hat <- nb_drops$theta      # starting value
+# theta_hat
+# gee_model_full_exc_drop_NB <- glmgee(
+#   form_full,
+#   id      = ResponseId,
+#   family  = MASS::negative.binomial(theta = theta_hat, link = "log"),
+#   data    = gee_long_shared_drops,              # or your filtered data
+#   corstr  = "Exchangeable"                # try others too
+# )
+# # summary(gee_model_full_exc_drops_NB)
+# QIC_drop_NB <- QIC(gee_model_full_exc_drops_NB)
+```
+
+#### compare to model with the cases
+
+```{r}
+# Poisson
+gee_model_full_exc_allcases_P <- glmgee(
+  form_full,
+  id     = ResponseId,
+  family = poisson(link = "log"),
+  data   = gee_long_shared,
+  corstr = "Exchangeable",
+  na.action = na.omit
+)
+# summary(gee_model_full_exc_allcases_P)
+QIC_allcases_P <- glmtoolbox::QIC(gee_model_full_exc_allcases_P)
+
+# Quasi-Poisson
+gee_model_full_exc_allcases_Q <- glmgee(
+  form_full,
+  id     = ResponseId,
+  family = quasi(link = "log", variance = "mu"),
+  data   = gee_long_shared,
+  corstr = "Exchangeable",
+  na.action = na.omit
+)
+# summary(gee_model_full_exc_allcases_Q)
+QIC_allcases_Q <- glmtoolbox::QIC(gee_model_full_exc_allcases_Q)
+
+# # Negative Binominal
+# nb_allcases <- MASS::glm.nb(form_full, data = gee_long_shared)
+# theta_hat <- nb_allcases$theta      # starting value
+# theta_hat
+# gee_model_full_exc_allcases_NB <- glmgee(
+#   form_full,
+#   id      = ResponseId,
+#   family  = MASS::negative.binomial(theta = theta_hat, link = "log"),
+#   data    = gee_long_shared,              # or your filtered data
+#   corstr  = "Exchangeable"                # try others too
+# )
+# # summary(gee_model_full_exc_allcases_NB)
+# QIC_allcases_NB <- QIC(gee_model_full_exc_allcases_NB)
+```
+
+#### QIC
+
+AIC uses full likeihood, when GEE uses quasi-likelihood, so QIC is more common. Use QIC.
+
+families are very similar and similar would be expected.
+
+```{r}
+QIC_compare <- c(
+  QIC_drops_P   = QIC_drops_P,
+  QIC_drops_Q   = QIC_drops_Q,
+  # QIC_drops_NB = QIC_drops_NB,
+  QIC_allcases_P = QIC_allcases_P,
+  QIC_allcases_Q = QIC_allcases_Q
+  # QIC_allcases_NB = QIC_allcases_NB
+)
+
+# Convert to a table (data frame)
+QIC_df <- data.frame(
+  QIC = names(QIC_compare),
+  Value    = as.numeric(QIC_compare),
+  row.names = NULL
+)
+
+QIC_df
+```
+
+#### summary output of model
+
+```{r}
+summary(gee_model_full_exc_drops_P)
+```
+
+```{r}
+summary(gee_model_full_exc_drops_Q)
+```
+
+### Figures
+
+###### 📊 Fig: Histogram s/w/d
+
+```{r}
+not_jittered_hist_plot <- ggplot(combined_data, aes(
+  x = Value,
+  y = condition_rev,
+  fill = condition_rev
+)) +
+  geom_density_ridges2(
+    stat = "binline",
+    binwidth = 1,
+    scale = 0.9,
+    draw_baseline = TRUE,
+    show.legend = FALSE
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 3, by = 1),  # Show 0, 1, 2, 3 on the axis
+    limits = c(-0.5, 3.5),       # Extend limits to ensure visibility of 0 and 3
+    expand = c(0, 0),
+    name = "Count"
+  ) +
+  scale_y_discrete(
+    expand = expansion(add = c(0, 1.0)),
+    name = "Condition"
+  ) +
+  labs(
+    title = "",
+    x = "",
+    y = "Condition"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "MTS-Proself" = "#0073C2",     # Darker Blue
+      "MTS-Prosocial" = "#89CFF0",   # Lighter Blue
+      "Group-Proself" = "#228B22",   # Darker Green
+      "Group-Prosocial" = "#98FB98"  # Lighter Green
+    )
+  ) +
+  theme_ridges(grid = FALSE) +
+  theme(
+    axis.title.x = element_text(hjust = 0.5, size = 20),
+    axis.title.y = element_text(hjust = 0.5, size = 20),
+    axis.text.x = element_text(size = 20),
+    axis.text.y = element_text(size = 20),
+    strip.text.x = element_text(size = 16),
+    strip.text.y = element_text(size = 16)    
+  ) +
+  facet_grid(rows = vars(Action), cols = vars(Data_Type, Importance), scales = "fixed")
+
+print(not_jittered_hist_plot)
+
+```
+
+```{r}
+ggsave(
+  filename = "not_jittered_hist_plot.png",   # Change the file name as needed
+  plot = not_jittered_hist_plot,
+  width = 12.95,               # Width in inches
+  height = 8.97,              # Height in inches
+  dpi = 300                   # Resolution in dots per inch (use 300 for high-quality)
+)
+```
+
+```{r}
+ggplot(combined_data, aes(
+  x = Value,
+  fill = condition_rev,
+  group = condition_rev  # group by condition so bars dodge correctly
+)) +
+  geom_histogram(
+    binwidth = 1,
+    boundary = -0.5,
+    color = "black",
+    position = position_dodge(preserve = "single"),
+    alpha = 0.9
+  ) +
+  facet_grid(
+    rows = vars(Action),
+    cols = vars(Data_Type, Importance),
+    scales = "fixed"
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 3, 1),
+    limits = c(-0.5, 3.5),
+    name = "Value"
+  ) +
+  scale_y_continuous(name = "Count") +
+  scale_fill_manual(
+    values = c(
+      "MTS-Proself" = "#0073C2",
+      "MTS-Prosocial" = "#89CFF0",
+      "Group-Proself" = "#228B22",
+      "Group-Prosocial" = "#98FB98"
+    )
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 14),
+    strip.text = element_text(size = 16),
+    legend.position = "bottom",
+    legend.title = element_blank()
+  )
+```
+
+###### 📊 Fig: Response by Condition
+
+```{r}
+# pirate plot based on how participants shared information broken out by condition. 
+pirateplot(public_more_shared ~ interaction(motivation, structure_rev),
+           data = filtered_data,
+           xlab = "Group Structure",
+           ylab = "Intentions to Share",
+           ylim = c(1, 3),
+           yaxt = "n",
+           xaxt = "n",
+           gl.col = NA,
+           bty = "n",
+           pal = "xmen",
+           inf.method = "se",
+           avg.line.fun = mean,
+           jitter.val = 0.1,
+           theme = 2)
+
+
+axis(side = 2, at = 1:3, labels = 1:3, las = 1)
+box(bty = "l")
+```
+
+```{r}
+
+ggplot(filtered_data, aes(x = condition, y = public_more_shared)) +
+  geom_violin(trim = FALSE, fill = "lightblue", color = NA, alpha = 0.3) +   # Distribution
+  geom_boxplot(width = 0.2, outlier.shape = NA, fill = "white", color = "black") +  # Summary
+  geom_jitter(width = 0.1, height = 0.1, shape = 21, fill = "white", color = "black", alpha = 0.6, size = 2) +  # Raw data
+  stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red") +  # Mean
+  theme_minimal(base_size = 14) +
+  labs(
+    title = "Sharing of Public, High-Importance Info",
+    x = "Condition",
+    y = "Sharing Score (0–3)"
+  ) +
+  scale_y_continuous(breaks = 0:3)  # Only whole numbers on y-axis
+
+```
+
+###### 📊 Fig: Pirate plot, mean responses by reward and structure
+
+```{r}
+pirateplot(competition_score ~ condition,
+           data = filtered_data,
+           xlab = "Group Structure",
+           ylab = "Intentions to Share",
+           ylim = c(1, 5),
+           pal = "xmen",
+           inf.method = "se",
+           avg.line.fun = mean,
+           theme = 2)
+```
+
+###### 📊 Fig: Spider plot of distributions
+
+```{r}
+summary_table_public_more <- filtered_data %>% 
+  dplyr::group_by(condition) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    Share    = mean(public_more_shared,   na.rm = TRUE),
+    Withhold = mean(public_more_withheld, na.rm = TRUE),
+    Distort  = mean(public_more_distort,  na.rm = TRUE)
+  ) %>% 
+  dplyr::ungroup()
+
+print(summary_table_public_more)
+```
+
+```{r}
+summary_table_public_less <- filtered_data %>% 
+  dplyr::group_by(condition) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    Share    = mean(public_less_shared,   na.rm = TRUE),
+    Withhold = mean(public_less_withheld, na.rm = TRUE),
+    Distort  = mean(public_less_distort,  na.rm = TRUE)
+  ) %>% 
+  dplyr::ungroup()
+
+print(summary_table_public_less)
+```
+
+```{r}
+summary_table_private_more <- filtered_data %>% 
+  dplyr::group_by(condition) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    Share    = mean(private_more_shared,   na.rm = TRUE),
+    Withhold = mean(private_more_withheld, na.rm = TRUE),
+    Distort  = mean(private_more_distort,  na.rm = TRUE)
+  ) %>% 
+  dplyr::ungroup()
+
+print(summary_table_private_more)
+```
+
+```{r}
+summary_table_private_less <- filtered_data %>% 
+  dplyr::group_by(condition) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    Share    = mean(private_less_shared,   na.rm = TRUE),
+    Withhold = mean(private_less_withheld, na.rm = TRUE),
+    Distort  = mean(private_less_distort,  na.rm = TRUE)
+  ) %>% 
+  dplyr::ungroup()
+
+print(summary_table_private_less)
+```
+
+```{r}
+combined_data <- bind_rows(
+  summary_table_public_more   %>% mutate(info_type = "Public – More"),
+  summary_table_public_less   %>% mutate(info_type = "Public – Less"),
+  summary_table_private_more  %>% mutate(info_type = "Private – More"),
+  summary_table_private_less  %>% mutate(info_type = "Private – Less")
+)
+```
+
+```{r}
+long_data <- combined_data %>%
+  pivot_longer(cols = c(Share, Withhold, Distort),
+               names_to = "behavior",
+               values_to = "mean_value")
+```
+
+```{r}
+ggplot(long_data, aes(x = behavior, y = mean_value, fill = condition)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  facet_wrap(~ info_type) +
+  labs(
+    title = "Information Management Behaviors by Condition and Info Type",
+    x = "Intention",
+    y = "Mean Response",
+    fill = "Condition"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    strip.text = element_text(size = 14, face = "bold"),
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 14, face = "bold"),
+    legend.title = element_text(size = 13),
+    legend.text = element_text(size = 12)
+  )
+```
+
+# \*Negative Binomial
+
+MASS package for model
+
+negative binomial is best for overdispersion, not under dispersion. my data was underdispersion.
+
+#### shared model
+
+```{r}
+# Example formula based on your variables
+nb_model <- glmmTMB(
+  Count ~ structure_number01 * motivation_number01 +
+    InfoType * InfoImportance +
+    Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism +
+    (1 | ResponseId),   # random intercept for repeated measures
+  family = nbinom1,       # negative binomial with quadratic variance
+  data = gee_long_shared
+)
+summary(nb_model)
+```
+
+#### multicollinearity
+
+```{r}
+# performance library
+check_collinearity(nb_model)
+```
+
+#### no controls
+
+```{r}
+nb_simple <- glmmTMB(
+  Count ~ structure_number01 * motivation_number01 +
+    InfoType * InfoImportance +
+    (1 | ResponseId),
+  family = nbinom2,
+  data = gee_long_shared
+)
+
+nb_simple
+```
+
+#### zi formula
+
+```{r}
+# nb_zi <- glmmTMB(
+#   Count ~ structure_number01 * motivation_number01 +
+#     InfoType * InfoImportance +
+#     Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism +
+#     (1 | ResponseId),
+#   ziformula = ~1,     # models excess zeros
+#   family = nbinom2,
+#   data = gee_long_shared
+# )
+```
+
+#### zero inflation
+
+```{r}
+sim_res <- simulateResiduals(nb_simple)  # or your full model if it converges
+testZeroInflation(sim_res)
+plot(sim_res)
+```
+
+zero inflation test: ratioObsSim = 1.0595, p-value = 0.528; p-value is non signficant, meaning there is no evidence of excess zeros
+
+# \*quasi-Poisson
+
+#### cleaning data
+
+```{r}
+str(gee_long_shared)
+```
+
+```{r}
+# --- Fit GEE with quasi-Poisson (underdispersion-friendly) ---
+# 3) Fit the GEE on the filtered data
+gee_model_quasi <- geeglm(
+  form_full,
+  id     = ResponseId,
+  family = poisson(link = "log"),
+  data   = dat_full,
+  corstr = "exchangeable",
+  scale.fix = FALSE,
+  na.action = na.omit
+)
+
+summary(gee_model_quasi)
+```
+
+#### quasi with IRR
+
+```{r}
+# GEE Poisson mean; estimate dispersion φ (quasi-style) + robust (sandwich) SEs
+gee_pa <- geeglm(
+  Count ~ structure * motivation + InfoType * InfoImportance +
+    Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism,
+  id        = ResponseId,                 # cluster id
+  family    = poisson(link = "log"),      # <- use Poisson, not quasi-
+  corstr    = "exchangeable",
+  scale.fix = FALSE,                      # <- estimate φ (dispersion)
+  data      = gee_long_shared,
+  na.action = na.omit
+)
+
+sm  <- summary(gee_pa)                    # robust SEs are in this summary
+phi <- sm$geese$scale                     # φ < 1 suggests underdispersion
+
+# IRRs with robust 95% CIs
+cf  <- sm$coefficients
+irr <- exp(cf[, "Estimate"])
+lcl <- exp(cf[, "Estimate"] - 1.96 * cf[, "Std.err"])
+ucl <- exp(cf[, "Estimate"] + 1.96 * cf[, "Std.err"])
+
+irr_table <- data.frame(
+  term = rownames(cf),
+  IRR  = round(irr, 3),
+  LCL  = round(lcl, 3),
+  UCL  = round(ucl, 3),
+  p    = signif(cf[, "Pr(>|W|)"], 3),
+  row.names = NULL
+)
+irr_table
+```
+
+#### corstr compare
+
+```{r}
+gee_ind <- update(gee_pa, corstr = "independence")
+geepack::QIC(gee_pa); geepack::QIC(gee_ind)   # lower QIC wins
+```
+
+# \*glmmTMB
+
+```{r}
+gp_ss <- glmmTMB(
+  Count ~ structure * motivation + InfoType * InfoImportance +
+    Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism +
+    (1 | ResponseId),
+  family = genpois(link = "log"),   # generalized Poisson (handles underdispersion)
+  data   = gee_long_shared
+)
+summary(gp_ss)
+```
+
+### X Generalized Poisson (GP) with cluster-robust SEs (population-averaged)
+
+```{r}
+# install.packages(c("VGAM","sandwich","lmtest"))
+# install.packages(c("survey","svyVGAM","VGAM"))
+library(survey)
+library(svyVGAM)
+library(VGAM)
+
+# 1) Cluster-only design (each cluster = participant)
+des <- svydesign(id = ~ResponseId, weights = ~1, data = gee_long_shared)
+
+# 2) Generalized Poisson mean model (pick one parameterization)
+fit_gp <- svy_vglm(
+  Count ~ structure * motivation + InfoType * InfoImportance +
+    Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism,
+  family = genpoisson2(),   # or genpoisson0()
+  design = des
+)
+
+summary(fit_gp)  # coefficients + design-based (cluster-robust) SEs
+
+# IRRs from the robust coefficients
+b  <- coef(fit_gp)
+V  <- vcov(fit_gp)          # robust vcov from svy_vglm
+se <- sqrt(diag(V))
+IRR_GP <- data.frame(
+  term = names(b),
+  IRR  = exp(b),
+  LCL  = exp(b - 1.96*se),
+  UCL  = exp(b + 1.96*se)
+)
+IRR_GP
+
+
+```
+
+quasi-poisson with cluster-robust SEs (population averaged)
+
+```{r}
+library(sandwich)
+library(lmtest)
+
+fit_qp <- glm(
+  Count ~ structure * motivation + InfoType * InfoImportance +
+    Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism,
+  family = quasipoisson(link = "log"),
+  data   = gee_long_shared,
+  na.action = na.omit
+)
+
+V_cl  <- vcovCL(fit_qp, cluster = gee_long_shared$ResponseId, type = "HC1")
+ct    <- coeftest(fit_qp, vcov. = V_cl)
+
+est <- ct[, "Estimate"]; se <- ct[, "Std. Error"]
+IRR_QP <- data.frame(
+  term = names(est),
+  IRR  = round(exp(est), 3),
+  LCL  = round(exp(est - 1.96*se), 3),
+  UCL  = round(exp(est + 1.96*se), 3),
+  p    = signif(ct[, "Pr(>|z|)"], 3)
+)
+IRR_QP
+```
+
+### X GLMM (Generalized Linear Mixed Models)
+
+```{r}
+nb_glmm <- glmmTMB(
+  Count ~ structure * motivation + InfoType * InfoImportance + 
+    Q14.1 + Sex + NeedCog_Mean + DirtyDozen_Machiavellianism + 
+    (1 | ResponseId),
+  family = nbinom2, # nbinom1 also available
+  data = gee_long_shared
+)
+
+nb_glmm
+```
+
+## End of Page

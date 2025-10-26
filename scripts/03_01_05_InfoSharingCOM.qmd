@@ -1,0 +1,123 @@
+---
+title: "03_01_05_InfoSharingCOM"
+format: html
+---
+
+```{r}
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+```{r}
+library(glmmTMB)
+```
+
+## ---- INFORMATION SHARING TASK ----
+
+Based on Model Testing, the only significant controls to the model were:
+
+-   Need for Cognition
+
+-   Sex
+
+## Full Model
+
+### Setup
+
+```{r}
+#1) Identify the variables in the model
+form <- Count ~ (structure_number01 * motivation_number01 *
+  InfoType * InfoImportance) +
+  Sex + NeedCog_Mean + 
+  (1 | ResponseId)
+```
+
+```{r}
+# 2) Build complete-cases dataset for these vars + id
+vars_needed <- c("ResponseId", all.vars(form))
+
+dat_full <- gee_long_shared %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+### Run
+
+```{r}
+model_mixedCOM <- glmmTMB(form,
+               family = compois(),
+               data = dat_full
+)
+
+summary(model_mixedCOM)
+```
+
+## Models by Information Type
+
+### Setup
+
+```{r}
+#1) Identify the variables in the model
+form_limit <- Count ~ (structure_number01 * motivation_number01) +
+  Sex + NeedCog_Mean + 
+  (1 | ResponseId)
+
+# 2) Build complete-cases dataset for these vars + id
+vars_needed <- c("ResponseId", all.vars(form_limit))
+```
+
+### High & Private
+
+```{r}
+dat_high_private <- gee_long_shared %>%
+  filter(InfoImportance = 1 & InfoType = 1)
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+```{r}
+model_mixedCOM <- glmmTMB(form_limit,
+               family = compois(),
+               data = dat_full
+)
+
+summary(model_mixedCOM)
+```
+
+### High & Common
+
+```{r}
+model_mixedCOM <- glmmTMB(form_limit,
+               family = compois(),
+               data = dat_full
+)
+
+summary(model_mixedCOM)
+```
+
+### Low & Private
+
+```{r}
+model_mixedCOM <- glmmTMB(form_limit,
+               family = compois(),
+               data = dat_full
+)
+
+summary(model_mixedCOM)
+```
+
+### Low & Common
+
+```{r}
+model_mixedCOM <- glmmTMB(form_limit,
+               family = compois(),
+               data = dat_full
+)
+
+summary(model_mixedCOM)
+```

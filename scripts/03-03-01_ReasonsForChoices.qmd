@@ -1,0 +1,805 @@
+---
+title: "reasonsForChoices"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+```{r}
+# libraries
+library(psych)
+library(dplyr)
+library(glmtoolbox)
+library(dplyr)
+library(forcats)
+library(purrr)
+library(broom)  
+library(emmeans)
+library(igraph)
+library(qgraph)
+library(Matrix)
+```
+
+## 4. REASONS FOR CHOICES
+
+### vars
+
+#### conditions
+
+```{r}
+vars_conditions <- c(
+  "condition",
+  "structure",
+  "structure_number01",
+  "motivation",
+  "motivation_number01"
+)
+```
+
+#### all
+
+```{r}
+vars_reasons_all <- c(
+  "REASONS_1",
+  "REASONS_2",
+  "REASONS_3",
+  "REASONS_4",
+  "REASONS_5",
+  "REASONS_6",
+  "REASONS_7",
+  "REASONS_8"
+)
+```
+
+#### coOperation
+
+```{r}
+vars_reasons_coOp <- c(
+  "REASONS_1",
+  "REASONS_2",
+  "REASONS_3"
+)
+```
+
+#### coMpetition
+
+```{r}
+vars_reasons_coMp <- c(
+  "REASONS_4",
+  "REASONS_5",
+  "REASONS_6",
+  "REASONS_7",
+  "REASONS_8"
+)
+```
+
+### correlations
+
+#### all - spearman
+
+```{r}
+cor_mat <- corr_table(filtered_data, vars_reasons_all, vars_reasons_all, "spearman")
+
+cor_mat
+```
+
+#### coOperation
+
+```{r}
+corr_table(filtered_data, vars_reasons_coOp, vars_reasons_coOp, "spearman")
+```
+
+#### coMpetition
+
+```{r}
+corr_table(filtered_data, vars_reasons_coMp, vars_reasons_coMp, "spearman")
+```
+
+### create subset of data
+
+must create dataset with only variables of interest to run alpha
+
+#### all
+
+```{r}
+data_reasons_all <- filtered_data %>% 
+  dplyr::select(all_of(vars_reasons_all))
+```
+
+#### coOperation
+
+```{r}
+data_reasons_coOp <- filtered_data %>% 
+  dplyr::select(all_of(vars_reasons_coOp))
+```
+
+#### coMpetition
+
+```{r}
+data_reasons_coMp <- filtered_data %>% 
+  dplyr::select(all_of(vars_reasons_coMp))
+```
+
+#### counts of endorsement per participant
+
+```{r}
+endorse_counts <- filtered_data %>%
+  mutate(
+    coop_total = rowSums(across(all_of(vars_reasons_coOp)), na.rm = TRUE),
+    comp_total = rowSums(across(all_of(vars_reasons_coMp)), na.rm = TRUE)
+  ) %>%
+  select(any_of(vars_conditions), any_of(c("ResponseId")),
+         all_of(vars_reasons_coOp), all_of(vars_reasons_coMp),
+         coop_total, comp_total)
+```
+
+#### proportion of count
+
+```{r}
+endorse_counts <- endorse_counts %>%
+  mutate(
+    coop_prop = coop_total / length(vars_reasons_coOp),
+    comp_prop = comp_total / length(vars_reasons_coMp)
+  )
+```
+
+#### count z-score
+
+```{r}
+endorse_counts <- endorse_counts %>%
+  mutate(
+    coop_z = scale(coop_total),
+    comp_z = scale(comp_total)
+  )
+```
+
+### alpha
+
+uses psych library
+
+#### all
+
+```{r}
+psych::alpha(data_reasons_all)
+```
+
+#### coOperation
+
+```{r}
+psych::alpha(data_reasons_coOp)
+```
+
+#### coMpetition
+
+```{r}
+psych::alpha(data_reasons_coMp)
+```
+
+### descriptives
+
+#### all
+
+```{r}
+summarise_numeric(filtered_data, vars_reasons_all)
+```
+
+#### frequencies
+
+```{r}
+# data_reasons_all
+
+
+endorse_freq <- data_reasons_all %>%
+  pivot_longer(
+    everything(),
+    names_to = "Item",
+    values_to = "Endorsed"
+  ) %>%
+  group_by(Item) %>%
+  summarise(
+    n_endorsed = sum(Endorsed == 1, na.rm = TRUE),
+    prop_endorsed = mean(Endorsed == 1, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+endorse_freq
+```
+
+#### counts
+
+```{r}
+endorse_count_summary <- endorse_counts %>%
+  summarise(
+    M_coop = mean(coop_total, na.rm = TRUE),
+    SD_coop = sd(coop_total, na.rm = TRUE),
+    M_comp = mean(comp_total, na.rm = TRUE),
+    SD_comp = sd(comp_total, na.rm = TRUE)
+  )
+
+endorse_count_summary
+```
+
+### cross-tab condition
+
+#### means and sd
+
+```{r}
+desc_tbl <- map_dfr(vars_reasons_all, desc_by_cell)
+desc_tbl
+```
+
+```{r}
+var_order <- vars_reasons_all
+
+cond_order <- c(                           # put the columns how you want them
+  "individual–prosocial",
+  "individual–proself",
+  "group–prosocial",
+  "group–proself"
+)
+
+# 2) prep, set factor levels for ordering, and pivot wide
+apa_tbl <- desc_tbl %>%
+  mutate(
+    condition = paste(structure, motivation, sep = "–"),
+    condition = factor(condition, levels = cond_order),
+    variable  = factor(variable,  levels = var_order),
+    cell      = sprintf("%.2f (%.2f)", M, SD)
+  ) %>%
+  dplyr::select(variable, condition, cell) %>%
+  tidyr::pivot_wider(names_from = condition, values_from = cell) %>%
+  arrange(variable) %>%                     # rows follow var_order
+  dplyr::select(variable, any_of(cond_order))      # columns follow cond_order
+
+apa_tbl
+```
+
+#### count
+
+```{r}
+endorse_counts_by_condition <- endorse_counts %>%
+  group_by(condition) %>%
+  summarise(
+    Coop = paste0(
+      round(mean(coop_total, na.rm = TRUE), 2), 
+      " (", round(sd(coop_total, na.rm = TRUE), 2), ")"
+    ),
+    Comp = paste0(
+      round(mean(comp_total, na.rm = TRUE), 2), 
+      " (", round(sd(comp_total, na.rm = TRUE), 2), ")"
+    ),
+    n = dplyr::n(),
+    .groups = "drop"
+  )
+
+endorse_counts_by_condition
+```
+
+#### proportion of count
+
+```{r}
+endorse_countsprop_by_condition <- endorse_counts %>%
+  group_by(condition) %>%
+  summarise(
+    Coop = paste0(
+      round(mean(coop_prop, na.rm = TRUE), 2), 
+      " (", round(sd(coop_prop, na.rm = TRUE), 2), ")"
+    ),
+    Comp = paste0(
+      round(mean(comp_prop, na.rm = TRUE), 2), 
+      " (", round(sd(comp_prop, na.rm = TRUE), 2), ")"
+    ),
+    n = dplyr::n(),
+    .groups = "drop"
+  )
+
+endorse_countsprop_by_condition
+```
+
+### 🗑️wide data
+
+GEE requires long data, rather than wide data
+
+```{r}
+# Limit variables to those that should be inlcuded in the long dataframe
+data_reasons_wide <- filtered_data %>%
+  dplyr::select(
+    "ResponseId",
+    "structure",
+    "motivation",
+    "structure_number01",
+    "motivation_number01",
+    "Q14.1",
+    "sex",
+    "SES_mean",
+    "NeedCog_Mean",
+    "DirtyDozen_Narcissism",
+    "DirtyDozen_Psychopathy",
+    "DirtyDozen_Machiavellianism",
+    "DirtyDozen_Mean",
+    "SVO_angle",
+    "Manipulation_Mean",
+    "hispanic",
+    "REASONS_1",
+    "REASONS_2",
+    "REASONS_3",
+    "REASONS_4",
+    "REASONS_5",
+    "REASONS_6",
+    "REASONS_7",
+    "REASONS_8"
+  )
+
+```
+
+```{r}
+item_key <- tibble(
+  ItemCode  = vars_reasons_all,
+  Frame = c("coOp","coOp","coOp","coMp","coMp","coMp","coMp","coMp"),
+  ItemLabel = c("Trusted others would share",
+            "Commitment to share",
+            "Solve the problem (intrinsic)",
+            "Did not want to lose",
+            "Exploit others’ sharing",
+            "Did not trust others",
+            "Avoid being exploited",
+            "Don’t let others do better")
+)
+```
+
+```{r}
+# Convert to long dataframe
+data_reasons_long <- data_reasons_wide %>%
+  pivot_longer(
+    cols = all_of(vars_reasons_all),
+    names_to  = "ItemCode",
+    values_to = "Endorse"
+  ) %>%
+  left_join(item_key, by = "ItemCode") %>%
+  mutate(
+    Frame     = factor(Frame, levels = c("coOp","coMp")),
+    ItemCode  = factor(ItemCode, levels = vars_reasons_all),
+    structure = factor(structure),
+    motivation= factor(motivation),
+    ResponseId= factor(ResponseId),
+    Age       = suppressWarnings(as.numeric(Q14.1)),
+    Sex       = factor(sex),
+    SES_mean  = suppressWarnings(as.numeric(SES_mean)),
+    NeedCog_Mean = suppressWarnings(as.numeric(NeedCog_Mean)),
+    DirtyDozen_Narcissism       = suppressWarnings(as.numeric(DirtyDozen_Narcissism)),
+    DirtyDozen_Psychopathy      = suppressWarnings(as.numeric(DirtyDozen_Psychopathy)),
+    DirtyDozen_Machiavellianism = suppressWarnings(as.numeric(DirtyDozen_Machiavellianism)),
+    SVO_angle = suppressWarnings(as.numeric(SVO_angle))
+  ) %>%
+  dplyr::select(ResponseId, structure, motivation, Frame, ItemCode, ItemLabel, Endorse, everything())
+
+
+# View(data_reasons_long)
+```
+
+#### coOp data
+
+```{r}
+data_reasons_long_coop <- data_reasons_long %>%
+  dplyr::filter(Frame == "coOp") %>%
+  dplyr::mutate(
+    Frame    = droplevels(Frame),
+    ItemCode = droplevels(ItemCode)
+  )
+
+```
+
+#### coMp data
+
+```{r}
+data_reasons_long_comp <- data_reasons_long %>%
+  dplyr::filter(Frame == "coMp") %>%
+  dplyr::mutate(
+    Frame    = droplevels(Frame),
+    ItemCode = droplevels(ItemCode)
+  )
+
+```
+
+### 🟧logistic regression
+
+create division between the two frames used in the items: cooperation and competition
+
+#### control variables
+
+```{r}
+form_controls <- Endorse ~ 
+  Q14.1 + Sex + SES_mean + hispanic +
+  NeedCog_Mean + 
+  DirtyDozen_Narcissism +
+  DirtyDozen_Psychopathy +
+  DirtyDozen_Machiavellianism +
+  SVO_angle
+```
+
+##### all
+
+```{r}
+gee_reason_controls <- glmgee(
+  form_controls,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason_controls, corr.digits=2, varest="bias-corrected")
+```
+
+```{r}
+model_summary <- gee_reason_controls
+
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  model_summary,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(model_summary$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+##### coOperation
+
+```{r}
+gee_reason__coOp_controls <- glmgee(
+  form_controls,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long_coop,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason__coOp_controls, corr.digits=2, varest="bias-corrected")
+```
+
+```{r}
+model_summary <- gee_reason__coOp_controls
+
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  model_summary,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(model_summary$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+##### coMpetition
+
+```{r}
+gee_reason__coMp_controls <- glmgee(
+  form_controls,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long_comp,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason__coMp_controls, corr.digits=2, varest="bias-corrected")
+```
+
+```{r}
+model_summary <- gee_reason__coMp_controls
+
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  model_summary,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(model_summary$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+#### 🟧models
+
+models with the conditions included
+
+```{r}
+form_model <- Endorse ~ structure_number01 * motivation_number01 + Q14.1 
+```
+
+##### coOperation
+
+```{r}
+gee_reason_coOp <- glmgee(
+  form_model,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long_coop,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason_coOp, corr.digits=2, varest="bias-corrected")
+```
+
+```{r}
+model_summary <- gee_reason_coOp
+
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  model_summary,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(model_summary$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+###### drop cases
+
+```{r}
+# Put IDs to drop below
+drop_ids <- c(
+  "R_2wpBqhR7RBKSVMh",
+  "R_9NZOvLNPLr5aXYJ",
+  "R_2f3rqwY85h48vEW",
+  "R_2TsN65JNPpI1Z2p",
+  "R_1IAHkeMQfTPGbXe"
+)
+
+data_reasons_long_coop <- data_reasons_long_coop %>%
+  filter(!ResponseId %in% drop_ids)
+
+print("dropped")
+```
+
+###### rerun
+
+```{r}
+gee_reason_coOp <- glmgee(
+  form_model,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long_coop,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason_coOp, corr.digits=2, varest="bias-corrected")
+```
+
+###### Table: model coMp
+
+```{r}
+model <- gee_reason_coOp
+
+# Get coefficient table from your fitted model
+coef_table <- summary(model, corr.digits=2, varest="bias-corrected")$coefficients
+
+# Pull out estimates, SEs, and p-values
+est <- coef_table[, "Estimate"]
+se  <- coef_table[, "Std.Error"]   # <- capital E
+p   <- coef_table[, "Pr(>|z|)"]    # <- not W, but z
+
+# Compute IRR (odds ratio)
+irr <- exp(est)
+
+# Compute 95% CI for IRR
+lower <- exp(est - 1.96 * se)
+upper <- exp(est + 1.96 * se)
+
+# Put into one table
+results <- data.frame(
+  Estimate = round(est, 2),
+  SE       = round(se, 2),
+  p_value  = signif(p, 2),
+  IRR      = round(irr, 2),
+  CI       = paste0("[", round(lower, 2), ", ", round(upper, 2), "]")
+)
+
+print(results)
+```
+
+##### coMpetition
+
+```{r}
+gee_reason_coMp <- glmgee(
+  form_model,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long_comp,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason_coMp, corr.digits=2, varest="bias-corrected")
+```
+
+```{r}
+model_summary <- gee_reason_coMp
+
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  model_summary,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(model_summary$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+###### drop cases
+
+```{r}
+# Put IDs to drop below
+drop_ids <- c(
+"R_2wpBqhR7RBKSVMh",
+"R_87Ew3rN6MShE6CB",
+"R_1LiHDxMhn1OjVXz",
+"R_DTOIxAq5bZIHbGx",
+"R_CazljxynrmgmA4F",
+"R_3kiDUZJ8TlKyVob",
+"R_2xWAwczrTQNRrgi"
+)
+
+data_reasons_long_comp <- data_reasons_long_comp %>%
+  filter(!ResponseId %in% drop_ids)
+
+print("dropped")
+```
+
+###### rerun
+
+```{r}
+gee_reason_coMp <- glmgee(
+  form_model,
+  id     = ResponseId,          
+  family = binomial("logit"),
+  data   = data_reasons_long_comp,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_reason_coMp, corr.digits=2, varest="bias-corrected")
+```
+
+```{r}
+model <- gee_reason_coMp
+
+# Get coefficient table from your fitted model
+coef_table <- summary(model, corr.digits=2, varest="bias-corrected")$coefficients
+
+# Pull out estimates, SEs, and p-values
+est <- coef_table[, "Estimate"]
+se  <- coef_table[, "Std.Error"]   # <- capital E
+p   <- coef_table[, "Pr(>|z|)"]    # <- not W, but z
+
+# Compute IRR (odds ratio)
+irr <- exp(est)
+
+# Compute 95% CI for IRR
+lower <- exp(est - 1.96 * se)
+upper <- exp(est + 1.96 * se)
+
+# Put into one table
+results <- data.frame(
+  Estimate = round(est, 2),
+  SE       = round(se, 2),
+  p_value  = signif(p, 2),
+  IRR      = round(irr, 2),
+  CI       = paste0("[", round(lower, 2), ", ", round(upper, 2), "]")
+)
+
+print(results)
+```
+
+```{r}
+g <- graph_from_adjacency_matrix(co_prop, weighted = TRUE, diag = FALSE)
+plot(g, edge.width = E(g)$weight * 10)  
+# thicker edges = stronger co-occurrence
+
+```
+
+------------------------------------------------------------------------
+
+## END
+
+```{r}
+print("All done!")
+```

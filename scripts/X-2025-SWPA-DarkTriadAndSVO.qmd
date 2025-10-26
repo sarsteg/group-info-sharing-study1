@@ -1,0 +1,134 @@
+---
+title: "Dark Triad & SVO Poster Presentation Graphics"
+format: 
+  html: 
+    self-contained: true
+    toc: true             
+  pdf: 
+    number-sections: true 
+    toc: true            
+    pdf-engine: xelatex 
+editor: visual
+---
+
+## Setup
+
+```{r load-libraries}
+#| message: false
+#| warning: false
+#| include: false
+library(tidyr)
+library(haven)
+library(dplyr)
+library(labelled)
+library(descr)
+library(ggplot2)
+library(forcats)
+library(yarrr)
+```
+
+```{r load-data}
+data <- read_sav("SESR 1 - II Group Discussion from Fall 2022 Working.sav")
+```
+
+```{r view-data}
+View(data)
+```
+
+```{r codebook-creation}
+codebook <- look_for(data)
+View(codebook)
+```
+
+## SVO
+
+### Data Manipulation
+
+#### Exclude data that was flagged.
+
+```{r}
+freq(as.ordered(data$Include), plot = 0)
+```
+
+```{r filter-data}
+filtered_data <- data %>% 
+  filter(Include == 1)
+```
+
+```{r}
+freq(as.ordered(filtered_data$Include), plot = 0)
+```
+
+```{r}
+View(filtered_data)
+```
+
+#### Mutate variables to be factors
+
+```{r}
+print(attributes(filtered_data$SVO_type))
+```
+
+```{r}
+attr(filtered_data$SVO_type, "labels")
+```
+
+```{r}
+levels(filtered_data$SVO_type)
+```
+
+```{r}
+table(filtered_data$SVO_type) 
+```
+
+```{r}
+str(data$SVO_type)
+```
+
+```{r}
+filtered_data <- filtered_data %>% 
+  mutate(SVO_type = as_factor(SVO_type))
+```
+
+```{r}
+attr(filtered_data$SVO_type, "labels")
+```
+
+```{r}
+levels(filtered_data$SVO_type)
+```
+
+### Descriptives
+
+```{r}
+label_map <- c("1" = "Competitive",
+               "2" = "Individualistic",
+               "3" = "Prosocial",
+               "4" = "Altruistic")
+
+data <- data %>%
+  mutate(SVO_type = recode(as.character(SVO_type), !!!label_map),
+         SVO_type = factor(SVO_type, levels = c("Competitive", "Individualistic", "Prosocial", "Altruistic")))  # Order labels
+
+```
+
+```{r}
+# Categorical variable
+
+
+# Apply the mapping directly inside ggplot
+data %>%
+  filter(!is.na(SVO_type)) %>% 
+  ggplot(aes(x = fct_relevel(recode(as.character(SVO_type), !!!label_map), 
+                        "Altruistic", "Prosocial", "Individualistic", "Competitive"))) +  
+  geom_bar() +
+  ggtitle("SVO") +
+  xlab("SVO Type") +
+  ylab("Frequency") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) # Rotate text if needed
+```
+
+## Dark Triad
+
+## Pirate Plot

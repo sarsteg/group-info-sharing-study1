@@ -1,0 +1,27 @@
+---
+title: "alphas"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+```
+
+```{r}
+library(psych)
+```
+
+## ---- ALPHAS ----
+
+Run analyses with the 104 dataframe
+
+## Need for Cognition
+
+```{r}
+alpha_result <- alpha(mydata[, c("item1", "item2", "item3", "item4", "item5")])
+alpha_result$total$raw_alpha 
+```
+
+## Concise Dirty Dozen Scale
+
+## SES_Mean

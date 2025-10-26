@@ -1,0 +1,151 @@
+---
+title: "informationSharingBxSummary"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+gee_long_all_bx <- readRDS("../artifacts/gee_long_all_bx.rds")
+gee_long_non <- readRDS("../artifacts/gee_long_non.rds")
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+source("../_common.R")
+```
+
+## 3. INFORMATION SHARING TASK
+
+#### behavior summary, descriptives
+
+```{r}
+# descriptives for each type of information and intention
+# Calculate mean behavior frequencies per participant
+behavior_summary <- gee_long_all_bx %>%
+  group_by(ResponseId, Behavior) %>%
+  summarise(total = sum(Count), .groups = "drop") %>%
+  tidyr::pivot_wider(
+    names_from = Behavior,
+    values_from = total,
+    values_fill = 0  # fill NAs with 0
+  )
+
+# View(behavior_summary)
+```
+
+```{r}
+# For the participants who were distorting a lot, what are their dark triad scores? 
+# # R_1dac9ySUkwuAnbH
+# filtered_data %>%
+#   filter(ResponseId == R_1dac9ySUkwuAnbH) %>%
+#   select(distort, mach)
+# 
+# # R_3qDudeTjdxqbqDz
+# filtered_data %>%
+#   filter(ResponseId == R_3qDudeTjdxqbqDz) %>%
+#   select(distort, mach)
+```
+
+```{r}
+# Convert to long format
+behavior_long <- behavior_summary %>%
+  pivot_longer(
+    cols = c(shared, withheld, distort),   # specify behavior columns
+    names_to = "Behavior",                 # name of the new column with behavior types
+    values_to = "Count"                    # name of the new column with counts
+  ) %>%
+  group_by(ResponseId) %>%
+  mutate(Prop = Count / sum(Count)) %>%    # calculate proportion of responses per person
+  ungroup()
+
+```
+
+```{r}
+# Using behavior_summary variable created earlier in the code
+# How many participants did not distort anything at all? 
+
+distortion_freq <- behavior_summary %>%
+  count(distort) %>%
+  mutate(
+    percent = 100 * n / sum(n)
+  ) %>%
+  arrange(distort)
+
+distortion_freq
+```
+
+```{r}
+# Boxplot + jitter by behavior, faceted or grouped
+# ggplot(behavior_long, aes(x = structure, y = Prop, fill = motivation)) +
+#   geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
+#   geom_jitter(aes(color = motivation),
+#               position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75),
+#               alpha = 0.5, size = 2, show.legend = FALSE) +
+#   stat_summary(
+#     fun = mean,
+#     geom = "point",
+#     aes(group = motivation),
+#     position = position_dodge(width = 0.75),
+#     shape = 21,
+#     size = 3,
+#     color = "black",
+#     fill = "white"
+#   ) +
+#   facet_wrap(~ Behavior) +  # Create one panel per behavior type
+#   scale_fill_brewer(palette = "Pastel1") +
+#   scale_color_brewer(palette = "Set1") +
+#   theme_classic() +
+#   theme(
+#     text = element_text(size = 25, family = "serif"),
+#     axis.title = element_text(size = 25, face = "bold", color = "black"),
+#     axis.text = element_text(size = 25, face = "plain", color = "black"),
+#     axis.ticks = element_line(color = "black", linewidth = 0.5),
+#     axis.ticks.length = unit(0.10, "cm"),
+#     axis.line = element_line(color = "black"),
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     panel.border = element_blank(),
+#     strip.text = element_text(size = 20, face = "bold"),  # facet label style
+#     legend.title = element_text(size = 25, color = "black"),
+#     legend.text = element_text(size = 25, color = "black")
+#   ) +
+#   labs(
+#     title = "",
+#     x = "Group Structure",
+#     y = "Proportion of Responses",
+#     fill = "Motivation"
+#   )
+
+
+```
+
+### Checking cases with high distortion
+
+4 cases chose to distort more than 5 items (2 cases at 6, 2 cases at 7)
+
+```{r}
+filtered_distort <- filtered_data %>%
+  filter(ResponseId %in% c("R_1dac9ySUkwuAnbH",
+                           "R_3qDudeTjdxqbqDz",
+                           "R_2sbVAC7K53oMVCH",
+                           "R_UbgFm6itImMChDX"
+                           )) %>% 
+  select(
+          structure_number01,
+          motivation_number01,
+          Q14.1,
+          SES_mean,
+          hispanic,
+          NeedCog_Mean,
+          DirtyDozen_Narcissism,
+          DirtyDozen_Psychopathy,
+          DirtyDozen_Machiavellianism,
+          SVO_angle
+    )
+```
+
+```{r}
+View(filtered_distort)
+```
+
+```{r}
+describe(filtered_distort)
+```

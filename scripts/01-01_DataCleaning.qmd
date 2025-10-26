@@ -1,0 +1,766 @@
+---
+title: "dataCleaning"
+format: html
+---
+
+# -----Setup—–
+
+```{r load-libraries}
+#| message: false
+#| warning: false
+#| include: false
+library(tidyr)
+library(tidyverse)
+library(haven)
+library(labelled)
+library(descr)
+library(ggplot2)
+library(patchwork)
+library(ggridges)
+library(showtext)
+library(extrafont)
+library(systemfonts)
+library(Cairo)
+library(effsize)
+library(psych)
+library(car)
+library(lsr)
+library(yarrr)
+library(fmsb)
+# library(gee) # Does not share p values, but z scores
+library(ggeffects)
+library(broom)
+library(emmeans)
+library(lme4)
+library(MASS)
+library(glmmTMB)
+library(performance)
+library(DHARMa)
+library(sandwich)
+library(lmtest)
+library(VGAM)
+library(survey)
+library(svyVGAM)
+library(stringr)
+library(readr)
+```
+
+```{r load-data-and-create-codebook}
+# Captures data from .sav file
+source("loadDataFiltered.R")
+```
+
+```{r}
+# system_fonts <- system_fonts()
+# View(system_fonts)
+```
+
+```{r}
+#| include: false
+# Add Times New Roman font (if it's installed on your system)
+# font_add(family = "Times New Roman", regular = "times.ttf")
+# showtext_auto()
+loadfonts(device = "win")
+```
+
+```{r view-data}
+#View(data)
+```
+
+```{r codebook-creation}
+# codebook <- look_for(filtered_data)
+# View(codebook)
+```
+
+# Data Cleaning
+
+# 1. filtered_data
+
+```{r}
+# Ensure 'condition' is a factor
+filtered_data$condition <- as.factor(filtered_data$condition)
+
+filtered_data <- filtered_data %>%
+  mutate(
+    condition_rev = case_when(
+      condition == "group-proself" ~ "MTS-Proself",
+      condition == "group-prosocial" ~ "MTS-Prosocial",
+      condition == "individual-proself" ~ "Group-Proself",
+      condition == "individual-prosocial" ~ "Group-Prosocial",
+      TRUE ~ condition  # fallback
+    )
+  )
+ 
+```
+
+```{r}
+# Step 2: Now recode using the cleaned version
+filtered_data <- filtered_data %>%
+  mutate(
+    structure_rev = dplyr::recode(as.character(structure),
+                           "individual" = "group",
+                           "group" = "MTS")
+  )
+```
+
+```{r}
+freq(as.ordered(filtered_data$structure_rev), plot=0)
+freq(as.ordered(filtered_data$structure), plot=0)
+```
+
+```{r}
+#| warning: false
+
+# Reasons for Choices
+
+filtered_data <- filtered_data %>% 
+  mutate(across(Q7.2_1:Q7.6_5, ~ ifelse(is.na(.), 0, .)))
+
+# View(reasons_df)
+
+
+# Create summary variables to combined individual phrasing and group phrasing
+filtered_data <- filtered_data %>% 
+    mutate(
+      REASONS_1 = coalesce(Q7.2_1, Q7.5_1),
+      REASONS_2 = coalesce(Q7.2_2, Q7.5_2),
+      REASONS_3 = coalesce(Q7.2_3, Q7.5_3),
+      REASONS_4 = coalesce(Q7.3_1, Q7.6_1),
+      REASONS_5 = coalesce(Q7.3_2, Q7.6_2),
+      REASONS_6 = coalesce(Q7.3_3, Q7.6_3),
+      REASONS_7 = coalesce(Q7.3_4, Q7.6_4),
+      REASONS_8 = coalesce(Q7.3_5, Q7.6_5)
+      )
+
+# Update labels for clarity
+var_label(filtered_data$REASONS_1) <- "I would have trusted the other groups to also share information"
+var_label(filtered_data$REASONS_2) <- "I would have shared information because the commitment to share"
+var_label(filtered_data$REASONS_3) <- "I would have wanted to solve the problem regardless of the reward"
+var_label(filtered_data$REASONS_4) <- "We would not have want to lose"
+var_label(filtered_data$REASONS_5) <- "We would have thought the other groups would share information with us and we could take advantage"
+var_label(filtered_data$REASONS_6) <- "We would not trust other groups to share information with us"
+var_label(filtered_data$REASONS_7) <- "We would not want to be exploited by the other groups"
+var_label(filtered_data$REASONS_8) <- "We would not want the other groups to do better than us"
+
+# View(filtered_data)
+```
+
+#### self-report cooperation
+
+```{r}
+# Calculate the means for competition / cooperation items, using recoded competition questions
+filtered_data <- filtered_data %>%
+  rowwise() %>%
+  mutate(competition_score = mean(c_across(RQ16.1_1:Q16.1_8), na.rm = TRUE)) %>%
+  ungroup()
+```
+
+#### reasons for choices
+
+```{r}
+filtered_data <- filtered_data %>%
+  mutate(
+    REASONS_1 = rowSums(across(c(Q7.2_1, Q7.5_1)), na.rm = TRUE),
+    REASONS_2 = rowSums(across(c(Q7.2_2, Q7.5_2)), na.rm = TRUE),
+    REASONS_3 = rowSums(across(c(Q7.2_3, Q7.5_3)), na.rm = TRUE),
+    REASONS_4 = rowSums(across(c(Q7.3_1, Q7.6_1)), na.rm = TRUE),
+    REASONS_5 = rowSums(across(c(Q7.3_2, Q7.6_2)), na.rm = TRUE),
+    REASONS_6 = rowSums(across(c(Q7.3_3, Q7.6_3)), na.rm = TRUE),
+    REASONS_7 = rowSums(across(c(Q7.3_4, Q7.6_4)), na.rm = TRUE),
+    REASONS_8 = rowSums(across(c(Q7.3_5, Q7.6_5)), na.rm = TRUE)
+  )
+```
+
+scoring
+
+```{r}
+# Reverse coded item for the Reasons scale
+filtered_data <- filtered_data %>%
+  mutate(REASONS_3_rev = ifelse(REASONS_3 == 1, 0,
+                         ifelse(REASONS_3 == 0, 1, NA)))
+```
+
+```{r}
+# Split cooperation and competition items for two subscales
+filtered_data <- filtered_data %>% 
+  mutate(
+    reasons_coop_mean   = rowMeans(
+      dplyr::select(., REASONS_1, REASONS_2, REASONS_3), na.rm = TRUE),
+    reasons_comp_mean   = rowMeans(
+      dplyr::select(., REASONS_4, REASONS_5, REASONS_6, REASONS_7, REASONS_8), na.rm = TRUE)
+  )
+
+
+```
+
+```{r}
+# Recode the comp items
+# REASONS_4, REASONS_5, REASONS_6, REASONS_7, REASONS_8
+
+# IF 1 - 1 = 0; if 1 - 0 = 1 -> flipped
+
+filtered_data <- filtered_data %>%
+  mutate(
+    REASONS_4R = 1 - REASONS_4,
+    REASONS_5R = 1 - REASONS_5,
+    REASONS_6R = 1 - REASONS_6,
+    REASONS_7R = 1 - REASONS_7,
+    REASONS_8R = 1 - REASONS_8
+    )
+```
+
+```{r}
+names(filtered_data)
+```
+
+```{r}
+filtered_data <- filtered_data %>% 
+  mutate(reasons_combined_mean = reasons_comp_mean - reasons_coop_mean)
+```
+
+```{r}
+filtered_data$reasons_flip_mean <- rowMeans(filtered_data[, c(
+  "REASONS_1",
+  "REASONS_2",
+  "REASONS_3",
+  "REASONS_4R",
+  "REASONS_5R",
+  "REASONS_6R",
+  "REASONS_7R",
+  "REASONS_8R"
+  )], na.rm = TRUE)
+
+```
+
+#### labeling
+
+```{r}
+filtered_data$motivation <- as.factor(filtered_data$motivation)
+```
+
+```{r}
+freq(as.ordered(filtered_data$condition), plot = FALSE)
+
+str(filtered_data$condition)
+
+filtered_data <- filtered_data %>% 
+    mutate(
+    condition_rev = dplyr::recode(as.character(condition),
+                    "group-proself"   = "MTS-Proself",
+                    "group-prosocial" = "MTS-Prosocial",
+                    "individual-proself"   = "Group-Proself",
+                    "individual-prosocial" = "Group-Prosocial"
+                     ))
+
+filtered_data$condition_rev <- factor(
+  filtered_data$condition_rev,
+  levels = c(
+    "Group-Prosocial", 
+    "Group-Proself", 
+    "MTS-Prosocial", 
+    "MTS-Proself"
+    ))
+
+freq(as.ordered(filtered_data$condition_rev), plot = FALSE)
+```
+
+```{r}
+freq(as.ordered(filtered_data$condition), plot = FALSE)
+
+str(filtered_data$condition)
+
+filtered_data <- filtered_data %>% 
+    mutate(
+    condition_rev = dplyr::recode(as.character(condition),
+                    "group-proself"   = "MTS-Proself",
+                    "group-prosocial" = "MTS-Prosocial",
+                    "individual-proself"   = "Group-Proself",
+                    "individual-prosocial" = "Group-Prosocial"
+                     ))
+
+freq(as.ordered(filtered_data$condition), plot = FALSE)
+```
+
+#### recode sex
+
+```{r}
+# Q14.2 was originall coded to be male = 1 and female = 2, but 0 and 1 are better, so I'd like to just subtract 1, and rename the variable
+filtered_data <- filtered_data %>% 
+    mutate(sex = Q14.2 - 1)
+
+```
+
+#### recode ethnicity
+
+##### combined race/ethnicity variable
+
+```{r}
+# Create a new column that sums the race selections for each participant
+filtered_data$RaceSum <- rowSums(filtered_data[, c("Q14.7_1", "Q14.7_2", "Q14.7_3", "Q14.7_4")], na.rm = TRUE)
+
+# Check if anyone has more than one race selected
+table(filtered_data$RaceSum)
+```
+
+5 participants slected more than one race
+
+#### recode race: one variable
+
+```{r}
+race_cols <- c("Q14.7_1","Q14.7_2","Q14.7_3","Q14.7_4")
+
+filtered_data <- filtered_data %>%
+  mutate(
+    RaceSum = rowSums(across(all_of(race_cols)), na.rm = TRUE),
+    Race = case_when(
+      RaceSum > 1 ~ "Multiracial",
+      RaceSum == 0 ~ NA_character_,                               # no selection
+      Q14.7_1 == 1 ~ "White",
+      Q14.7_2 == 1 ~ "Asian or Pacific Islander",
+      Q14.7_3 == 1 ~ "Black or African American",
+      Q14.7_4 == 1 ~ "American Indian or Alaskan Native",
+      TRUE ~ NA_character_
+    ),
+    Race = factor(
+      Race,
+      levels = c("White","Asian or Pacific Islander",
+                 "Black or African American",
+                 "American Indian or Alaskan Native",
+                 "Multiracial")
+    )
+  )
+```
+
+rename hispanic variable
+
+```{r}
+str(filtered_data$RQ14.6) 
+```
+
+```{r}
+filtered_data$hispanic <- filtered_data$RQ14.6
+```
+
+```{r}
+filtered_data <- filtered_data %>%
+  mutate(
+    hispanic = case_when(
+      str_trim(as.character(hispanic)) %in% c(".00", ".00 ") ~ 0,
+      str_trim(as.character(hispanic)) %in% c("1.00")        ~ 1,
+      TRUE ~ NA_real_
+    )
+  )
+
+```
+
+##### cross-tab race with hispanic
+
+```{r}
+table(filtered_data$hispanic, filtered_data$Race, useNA = "ifany")
+```
+
+due to the break down of the cells (being unequal) hispanic will be used, but race/ethnicity can not be used
+
+#### dirty dozen
+
+```{r}
+typeof(filtered_data$DirtyDozen_Narcissism)
+class(filtered_data$DirtyDozen_Narcissism)
+```
+
+```{r}
+filtered_data <- filtered_data %>%
+  mutate(
+    DirtyDozen_Narcissism = as.numeric(DirtyDozen_Narcissism)
+  )
+```
+
+### 🪦SVO Secondary Scale
+
+```{r}
+freq(as.ordered(filtered_data$IA_Index))
+```
+
+Reference for secondary classification: <https://ryanomurphy.com/resources/SVO_second_item_tutorial.pdf>\
+page 8, Evaluation of secondary items from data gained by online Slider measure.
+
+"Subjects are then categorized as\
+inequality averse if IA index \< 5, and\
+joint gain maximizing if IA index \> 5."
+
+```{r}
+class(filtered_data$IA_Index)
+```
+
+```{r}
+# Classify participants
+filtered_data$IA_Classification <- ifelse(filtered_data$IA_Index == 0.5, 
+                                          "Equal to 0.5",
+                                   ifelse(filtered_data$IA_Index < 0.5, 
+                                          "Inequality Averse",
+                                   ifelse(filtered_data$IA_Index > 0.5,
+                                          "Joint Gain",
+                                   NA)))
+
+# View the classification counts
+table(filtered_data$IA_Classification)
+```
+
+### SES Index
+
+#### 🪦 Three items: parental education and perceived relative income for university and community
+
+```{r}
+# Calculate average for three items
+filtered_data$SES_composite <- rowMeans(scale(filtered_data[c("Q14.3", "Q14.4", "Q14.5")]))
+```
+
+```{r}
+# summary(filtered_data$SES_composite)
+figure_ses <- ggplot(filtered_data, aes(x = SES_composite)) +
+  geom_histogram(binwidth = 0.25, fill = "gray", color = "black") +
+  labs(
+    x = "SES Score",
+    y = "Count"
+  ) +
+  scale_y_continuous(breaks = seq(0, 20, 5), limits = c(0, 20)) + 
+  coord_cartesian(ylim = c(0, 20)) +
+  theme_minimal(base_family = "serif") +
+  theme(
+    text = element_text(size = 16, family = "serif"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 16, face = "bold"),
+    
+    # ✅ These lines control the TICK MARKS
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    
+    # ✅ These restore AXIS LINES that ticks sit on
+    axis.line = element_line(color = "black"),
+    
+    # ✅ Remove background gridlines (APA prefers a clean look)
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+print(figure_ses)
+```
+
+```{r}
+ggsave(
+  "../figures/figure_ses.png", 
+  plot = figure_ses, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+
+```
+
+#### 🪦 Two items: perceived relative income for university and community
+
+```{r}
+# Calculate average for two items
+filtered_data$SES_income_composite <- rowMeans(
+  filtered_data[c("Q14.4", "Q14.5")], na.rm = TRUE)
+```
+
+```{r}
+# Descriptives on the new variable
+
+# Mean of SES composite
+mean(filtered_data$SES_income_composite, na.rm = TRUE)
+
+# Standard deviation of SES composite
+sd(filtered_data$SES_income_composite, na.rm = TRUE)
+
+# Minimum and maximum
+range(filtered_data$SES_income_composite, na.rm = TRUE)
+
+# Summary statistics
+summary(filtered_data$SES_income_composite)
+
+```
+
+```{r}
+# summary(filtered_data$SES_composite)
+figure_ses_income <- ggplot(filtered_data, aes(x = SES_income_composite)) +
+  geom_histogram(binwidth = 0.5, fill = "gray", color = "black") +
+  labs(
+    x = "SES Score",
+    y = "Count"
+  ) +
+  scale_x_continuous(breaks = 1:7) +
+  scale_y_continuous(breaks = seq(0, 20, 5), limits = c(0, 20)) + 
+  coord_cartesian(ylim = c(0, 20)) +
+  theme_minimal(base_family = "serif") +
+  theme(
+    text = element_text(size = 16, family = "serif", color = "black"),
+    axis.title = element_text(size = 16, face = "bold", color = "black"),
+    axis.text = element_text(size = 16, face = "plain", color = "black"),
+    
+    # ✅ These lines control the TICK MARKS
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    
+    # ✅ These restore AXIS LINES that ticks sit on
+    axis.line = element_line(color = "black"),
+    
+    # ✅ Remove background gridlines (APA prefers a clean look)
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+print(figure_ses_income)
+```
+
+```{r}
+ggsave(
+  "../figures/figure_ses_income.png", 
+  plot = figure_ses_income, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 1, 
+  dpi = 300
+  # device = Cairo::CairoPNG
+  )
+```
+
+#### ✅ Three items: Same scale
+
+```{r}
+library(psych)
+```
+
+```{r}
+# Create new variable for Education: 1–6 scale → 1–7 scale
+filtered_data$education_scaled <- (filtered_data$Q14.3 - 1) * (6/5) + 1
+
+# Start with your original education scores (which run from 1 to 6).
+# 
+# Shift them down so the lowest value becomes zero by subtracting 1.
+# 
+# Now your range is 0 to 5 instead of 1 to 6.
+# 
+# Stretch the range so it matches the new maximum you want (which is 6 instead of 5).
+# 
+# You do that by multiplying each value by a constant that makes 5 become 6.
+# 
+# Shift the whole set back up so the lowest value is 1 again instead of 0.
+# 
+# Now your scores run from 1 to 7, just like the income questions.
+# 
+# It’s basically a “shift → stretch → shift back” process so the range lines up exactly.
+```
+
+```{r}
+# Create the variable in the dataframe
+# Previous run above
+
+filtered_data <- filtered_data %>% mutate(
+  n_nonmiss_ses = rowSums(!is.na(across(c(education_scaled, Q14.4, Q14.5)))),
+  SES_mean = ifelse(
+    n_nonmiss_ses >= 2,
+    rowMeans(across(c(education_scaled, Q14.4, Q14.5)), na.rm = TRUE),
+    NA_real_
+  )
+)
+```
+
+```{r}
+summary(filtered_data[, c("education_scaled", "Q14.4", "Q14.5")])
+```
+
+```{r}
+# Columns we'll use
+items <- c("education_scaled", "Q14.4", "Q14.5")
+```
+
+```{r}
+d <- filtered_data %>% transmute(across(all_of(items), ~ suppressWarnings(as.numeric(.))))
+psych::alpha(as.data.frame(d))
+```
+
+Alpha (frame 2) = 0.78
+
+```{r}
+alpha_out <- psych::alpha(as.data.frame(filtered_data[, c("education_scaled", "Q14.4", "Q14.5")]))
+```
+
+```{r}
+# summary(filtered_data$SES_mean)
+# lm(outcome ~ SES_mean, data = filtered_data)
+```
+
+```{r}
+# alpha_out <- psych::alpha(filtered_data[education_scaled, Q14.4, Q14.5])
+# alpha_out$total$raw_alpha
+# alpha_out$total$std.alpha
+# alpha_out$item.stats
+# alpha_out$alpha.drop
+
+```
+
+### attention check
+
+creating a measure for the attention check?
+
+previously I had looked at how people rated on each of the items to see which ones they were above or below.
+
+```{r}
+# Information in the SPSS file
+```
+
+###### 💾Save backup_data RDS
+
+file with dropped cases
+
+```{r}
+saveRDS(filtered_data, "../artifacts/backup_data.rds")
+```
+
+### drop cases
+
+#### duplicated issues
+
+```{r}
+ids <- read_csv("../data/outliers/outliers_list.csv", show_col_types = FALSE)$ResponseId
+
+filtered_data <- filtered_data %>%
+  dplyr::filter(!ResponseId %in% ids)
+```
+
+###### 💾Save filtered_data RDS
+
+```{r}
+saveRDS(filtered_data, "../artifacts/filtered_data.rds")
+```
+
+```{r}
+names(filtered_data)
+```
+
+#### information sharing
+
+drop the cases that were flagged in drop-cases.qmd
+
+```{r}
+ids <- read_csv("../data/outliers/outliers_infosharing.csv", show_col_types = FALSE)$ResponseId
+
+info_data <- filtered_data %>%
+  dplyr::filter(!ResponseId %in% ids)
+```
+
+###### 💾Save info_data RDS
+
+```{r}
+saveRDS(filtered_data, "../artifacts/info_data.rds")
+```
+
+#### self-reported cooperation
+
+```{r}
+ids <- read_csv("../data/outliers/outliers_coop.csv", show_col_types = FALSE)$ResponseId
+
+coop_data <- filtered_data %>%
+  dplyr::filter(!ResponseId %in% ids)
+```
+
+###### 💾Save coop_data RDS
+
+```{r}
+saveRDS(filtered_data, "../artifacts/coop_data.rds")
+```
+
+## codebook update
+
+```{r}
+codebook <- look_for(filtered_data)
+saveRDS(codebook, "../artifacts/codebook.rds")
+```
+
+# 2. combined_data
+
+```{r}
+combined_data <- filtered_data %>%
+  dplyr::select(condition_rev, 
+         public_more_withheld, public_more_shared, public_more_distort,
+         public_less_withheld, public_less_shared, public_less_distort,
+         private_more_withheld, private_more_shared, private_more_distort,
+         private_less_withheld, private_less_shared, private_less_distort) %>%
+  pivot_longer(
+    cols = -condition_rev,  # All columns except 'condition_rev'
+    names_to = c("Data_Type", "Importance", "Action"),
+    names_sep = "_",
+    values_to = "Value"
+  ) %>%
+  mutate(
+    Data_Type = ifelse(Data_Type == "public", "Public", "Private"),
+    Importance = ifelse(Importance == "more", "More", "Less")
+  ) %>%
+  filter(!is.na(Value))  # Removing rows with missing values
+```
+
+```{r}
+combined_data <- combined_data %>%
+  mutate(
+    Data_Type = ifelse(Data_Type == "Private", "Unique",
+                       ifelse(Data_Type == "Public", "Common", Data_Type)),
+    Importance = ifelse(Importance == "Less", "Low",
+                        ifelse(Importance == "More", "High", Importance)),
+    Action = case_when(
+      Action == "shared" ~ "Shared",
+      Action == "withheld" ~ "Withheld",
+      Action == "distort" ~ "Distort",
+      TRUE ~ Action
+    ),
+    Action = factor(Action),  # convert to factor first
+    Action = fct_relevel(Action, "Shared", "Withheld", "Distort")  # relevel
+  )
+```
+
+```{r}
+combined_data <- combined_data %>%
+  mutate(
+    Structure = condition_rev,
+    Motivation = condition_rev
+  ) %>%
+  separate(Structure, into = c("Structure", "Remove"), sep = "-", remove = TRUE) %>%
+  separate(Motivation, into = c("Remove", "Motivation"), sep = "-", remove = TRUE) %>%
+  dplyr::select(-Remove)  # Optionally remove the 'Remove' column
+
+
+```
+
+```{r}
+freq(as.ordered(filtered_data$public_more_withheld), plot = 0)
+freq(as.ordered(filtered_data$public_more_shared), plot = 0)
+freq(as.ordered(filtered_data$public_more_distort), plot = 0)
+
+freq(as.ordered(filtered_data$public_less_withheld), plot = 0)
+freq(as.ordered(filtered_data$public_less_shared), plot = 0)
+freq(as.ordered(filtered_data$public_less_distort), plot = 0)
+
+freq(as.ordered(filtered_data$private_more_withheld), plot = 0)
+freq(as.ordered(filtered_data$private_more_shared), plot = 0)
+freq(as.ordered(filtered_data$private_more_distort), plot = 0)
+
+freq(as.ordered(filtered_data$private_less_withheld), plot = 0)
+freq(as.ordered(filtered_data$private_less_shared), plot = 0)
+freq(as.ordered(filtered_data$private_less_distort), plot = 0)
+
+```
+
+###### 💾Save combined_data RDS
+
+```{r}
+saveRDS(combined_data, "../artifacts/combined_data.rds")
+```
+
+# -----END-----
+
+```{r}
+print("Success! All code has been run.")
+```

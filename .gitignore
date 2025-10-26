@@ -1,0 +1,21 @@
+
+# Data files
+data/
+
+# Files
+/.quarto/
+
+*_files/
+*_cache/
+**/libs/
+scripts/analysis 12-12-24 Q_files/
+artifacts/
+*.js
+*.css
+
+# RStudio
+*.Rproj
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata

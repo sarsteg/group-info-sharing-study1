@@ -1,0 +1,359 @@
+---
+title: "Info Sharing Poster Presentation Graphics"
+format: 
+  html: 
+    self-contained: true
+    toc: true             
+  pdf: 
+    number-sections: true 
+    toc: true            
+    pdf-engine: xelatex 
+editor: visual
+---
+
+## Setup
+
+```{r load-libraries}
+#| message: false
+#| warning: false
+#| include: false
+library(tidyr)
+library(haven)
+library(dplyr)
+library(labelled)
+library(descr)
+library(ggplot2)
+library(forcats)
+library(patchwork)
+library(ggridges)
+```
+
+```{r load-data}
+data <- read_sav("../data/SESR 1 - II Group Discussion from Fall 2022 Working.sav")
+```
+
+```{r view-data}
+#View(data)
+```
+
+```{r codebook-creation}
+#codebook <- look_for(data)
+#View(codebook)
+```
+
+## Data Manipulation
+
+#### Exclude data that was flagged.
+
+```{r}
+freq(as.ordered(data$Include), plot = 0)
+```
+
+```{r filter-data}
+filtered_data <- data %>% 
+  filter(Include == 1)
+```
+
+```{r}
+freq(as.ordered(filtered_data$Include), plot = 0)
+```
+
+```{r}
+#View(filtered_data)
+```
+
+# Plots that are used
+
+## Data Cleaning
+
+```{r}
+# Ensure 'condition' is a factor
+filtered_data$condition <- as.factor(filtered_data$condition)
+
+filtered_data <- filtered_data %>% 
+    mutate(
+    condition_rev = recode(condition,
+                     "group-proself" = "MTS-proself",
+                     "group-prosocial" = "MTS-prosocial",
+                     "individual-proself" = "Group-proself",
+                     "individual-prosocial" = "Group-prosocial")
+    )
+ 
+```
+
+```{r}
+combined_data <- filtered_data %>%
+  select(condition_rev, 
+         public_more_withheld, public_more_shared, public_more_distort,
+         public_less_withheld, public_less_shared, public_less_distort,
+         private_more_withheld, private_more_shared, private_more_distort,
+         private_less_withheld, private_less_shared, private_less_distort) %>%
+  pivot_longer(
+    cols = -condition_rev,  # All columns except 'condition_rev'
+    names_to = c("Data_Type", "Importance", "Action"),
+    names_sep = "_",
+    values_to = "Value"
+  ) %>%
+  mutate(
+    Data_Type = ifelse(Data_Type == "public", "Public", "Private"),
+    Importance = ifelse(Importance == "more", "More", "Less")
+  ) %>%
+  filter(!is.na(Value))  # Removing rows with missing values
+```
+
+```{r}
+combined_data <- combined_data %>%
+  mutate(
+    Data_Type = ifelse(Data_Type == "Private", "Unique",
+                       ifelse(Data_Type == "Public", "Common", Data_Type)),
+    Importance = ifelse(Importance == "Less", "Low",
+                        ifelse(Importance == "More", "High", Importance)),
+    Action = ifelse(Action == "shared", "Shared",
+                    ifelse(Action == "withheld", "Withheld",
+                           ifelse(Action == "distort", "Distort", Action)))
+  )
+
+combined_data <- combined_data %>%
+  mutate(Action = fct_relevel(Action, "Shared", "Withheld", "Distort"))
+```
+
+```{r}
+combined_data <- combined_data %>%
+  mutate(
+    Structure = condition_rev,
+    Motivation = condition_rev
+  ) %>%
+  separate(Structure, into = c("Structure", "Remove"), sep = "-", remove = TRUE) %>%
+  separate(Motivation, into = c("Remove", "Motivation"), sep = "-", remove = TRUE) %>%
+  select(-Remove)  # Optionally remove the 'Remove' column
+
+
+```
+
+```{r}
+#Range of possible scores on the x-axis
+freq(as.ordered(filtered_data$public_more_shared), plot = 0)
+```
+
+```{r}
+freq(as.ordered(filtered_data$public_more_withheld), plot = 0)
+freq(as.ordered(filtered_data$public_more_shared), plot = 0)
+freq(as.ordered(filtered_data$public_more_distort), plot = 0)
+
+freq(as.ordered(filtered_data$public_less_withheld), plot = 0)
+freq(as.ordered(filtered_data$public_less_shared), plot = 0)
+freq(as.ordered(filtered_data$public_less_distort), plot = 0)
+
+freq(as.ordered(filtered_data$private_more_withheld), plot = 0)
+freq(as.ordered(filtered_data$private_more_shared), plot = 0)
+freq(as.ordered(filtered_data$private_more_distort), plot = 0)
+
+freq(as.ordered(filtered_data$private_less_withheld), plot = 0)
+freq(as.ordered(filtered_data$private_less_shared), plot = 0)
+freq(as.ordered(filtered_data$private_less_distort), plot = 0)
+
+```
+
+# Attempt 3
+
+```{r}
+#View(combined_data)
+```
+
+## Plot
+
+### Density plot - skipped
+
+```{r}
+
+not_jittered_combined_plot <- ggplot(combined_data, aes(
+  x = Value,
+  y = condition_rev,
+  fill = condition_rev
+)) +
+  stat_density_ridges(
+    geom = "density_ridges",
+    scale = 1,
+    rel_min_height = 0.01,
+    show.legend = FALSE
+  ) +
+  labs(
+    title = "",
+    x = "Count",
+    y = "Condition"
+  ) +
+  theme_minimal(base_size=20) +
+  facet_grid(rows = vars(Action), cols = vars(Data_Type, Importance)) +
+  scale_x_continuous(limits = c(0, 3))
+
+
+print(not_jittered_combined_plot)
+
+```
+
+```{r}
+# ggsave(
+#   filename = "not_jittered_combined_plot.png",   # Change the file name as needed
+#   plot = not_jittered_combined_plot,
+#   width = 12.95,               # Width in inches
+#   height = 8.97,              # Height in inches
+#   dpi = 300                   # Resolution in dots per inch (use 300 for high-quality)
+# )
+```
+
+### Histogram plots
+
+```{r}
+not_jittered_hist_plot <- ggplot(combined_data, aes(
+  x = Value,
+  y = condition_rev,
+  fill = condition_rev
+)) +
+  geom_density_ridges2(
+    stat = "binline",
+    binwidth = 1,
+    scale = 0.9,
+    draw_baseline = TRUE,
+    show.legend = FALSE
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 3, by = 1),  # Show 0, 1, 2, 3 on the axis
+    limits = c(-0.5, 3.5),       # Extend limits to ensure visibility of 0 and 3
+    expand = c(0, 0),
+    name = "Count"
+  ) +
+  scale_y_discrete(
+    expand = expansion(add = c(0, 1.0)),
+    name = "Condition"
+  ) +
+  labs(
+    title = "",
+    x = "",
+    y = "Condition"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "MTS-proself" = "#0073C2",     # Darker Blue
+      "MTS-prosocial" = "#89CFF0",   # Lighter Blue
+      "Group-proself" = "#228B22",   # Darker Green
+      "Group-prosocial" = "#98FB98"  # Lighter Green
+    )
+  ) +
+  theme_ridges(grid = FALSE) +
+  theme(
+    axis.title.x = element_text(hjust = 0.5, size = 20),
+    axis.title.y = element_text(hjust = 0.5, size = 20),
+    axis.text.x = element_text(size = 20),
+    axis.text.y = element_text(size = 20),
+    strip.text.x = element_text(size = 16),
+    strip.text.y = element_text(size = 16)    
+  ) +
+  facet_grid(rows = vars(Action), cols = vars(Data_Type, Importance))
+
+print(not_jittered_hist_plot)
+
+
+
+
+```
+
+```{r}
+ggsave(
+  filename = "not_jittered_hist_plot.png",   # Change the file name as needed
+  plot = not_jittered_hist_plot,
+  width = 12.95,               # Width in inches
+  height = 8.97,              # Height in inches
+  dpi = 300                   # Resolution in dots per inch (use 300 for high-quality)
+)
+```
+
+### Jittered - skipped
+
+```{r}
+# set.seed(123)  # For reproducibility
+# 
+# combined_data <- combined_data %>%
+#   mutate(Value_jittered = Value + rnorm(n(), mean = 0, sd = 0.7))
+
+```
+
+```{r}
+# ggplot(combined_data, aes(
+#   x = Value_jittered,
+#   y = condition_rev,
+#   fill = condition_rev
+# )) +
+#   geom_density_ridges(
+#     scale = 1,
+#     rel_min_height = 0.01,
+#     show.legend = FALSE
+#   ) +
+#   labs(
+#     title = "Smoothed Density Plot (Using Jittered Data)",
+#     x = "Values (Jittered)",
+#     y = "Condition"
+#   ) +
+#   theme_minimal() +
+#   facet_grid(rows = vars(Action), cols = vars(Data_Type, Importance)) +
+#   scale_x_continuous(limits = c(0, 3))
+
+```
+
+```{r}
+# all_combined_plot <- ggplot(combined_data, aes(
+#   x = Value_jittered,
+#   y = condition_rev,
+#   fill = condition_rev
+# )) +
+#   stat_density_ridges(
+#     geom = "density_ridges",
+#     scale = 1,
+#     rel_min_height = 0.01,
+#     show.legend = FALSE
+#   ) +
+#   labs(
+#     x = "Count",
+#     y = "Condition"
+#   ) +
+#   theme_minimal(base_size=20) +
+#   facet_grid(rows = vars(Action), cols = vars(Data_Type, Importance)) +
+#   scale_x_continuous(limits = c(0, 3))
+# 
+# 
+# print(all_combined_plot)
+
+```
+
+```{r}
+# ggsave(
+#   filename = "combined_plot.png",   # Change the file name as needed
+#   plot = all_combined_plot,
+#   width = 12.5,               # Width in inches
+#   height = 5.18,              # Height in inches
+#   dpi = 300                   # Resolution in dots per inch (use 300 for high-quality)
+# )
+
+
+```
+
+## Means
+
+```{r}
+# View(combined_data)
+```
+
+```{r}
+combined_data %>%
+  filter(Action %in% c("Shared", "Distort")) %>%  # Keep only relevant rows
+  group_by(Motivation, Action) %>%  # Group by Motivation and Action type
+  summarize(
+    MeanValue = mean(Value, na.rm = TRUE),
+    SD = sd(Value, na.rm = TRUE),
+    N = n(),
+    .groups = 'drop'  # Prevents the warning message about grouped output
+  ) %>%
+  arrange(Motivation, Action)
+
+
+
+```

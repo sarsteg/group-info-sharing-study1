@@ -1,0 +1,152 @@
+---
+title: "informationSharing"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+gee_long_all_bx <- readRDS("../artifacts/gee_long_all_bx.rds")
+gee_long_non <- readRDS("../artifacts/gee_long_non.rds")
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+combined_data <- readRDS("../artifacts/combined_data.rds")
+source("../_common.R")
+```
+
+```{r}
+#| message: false
+#| warning: false
+# Libraries
+library(glmtoolbox)
+library(geepack)
+library(glmmTMB)
+```
+
+## ---- INFORMATION SHARING TASK ----
+
+Note: cases were dropped that were flags in the drop-cases file.
+
+This version uses GEE Poisson and COM-Poisson. In both analyzes, the signiicant control variables are the same: sex and need for cognition.
+
+## control variables
+
+### form_controls
+
+```{r}
+# 1) Write your formula (drop Behavior if you're on shared-only data)
+form_controls <- Count ~ InfoType + InfoImportance +
+  Q14.1 + Sex + SES_mean + hispanic +
+  NeedCog_Mean + 
+  DirtyDozen_Narcissism +
+  DirtyDozen_Psychopathy +
+  DirtyDozen_Machiavellianism +
+  SVO_angle
+```
+
+```{r}
+form_mixed <- update(form_controls, . ~ . + (1 | ResponseId))
+```
+
+### label variables
+
+### create dat
+
+```{r}
+# 2) Build a complete-cases analysis data set for exactly these vars + id
+vars_needed <- c("ResponseId", all.vars(form_controls))
+
+dat <- gee_long_shared %>%
+  # make sure there are no character columns sneaking in
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+```{r}
+# Sanity checks
+stopifnot(nrow(dat) > 0)
+stopifnot(!any(is.na(dat$ResponseId)))
+# Make sure each factor in RHS has ≥2 levels
+sapply(dat[setdiff(all.vars(form_controls), c("Count"))], function(x)
+  if (is.factor(x)) nlevels(x) else NA_integer_) -> fac_lvls
+fac_lvls[!is.na(fac_lvls)]
+```
+
+## test controls
+
+### GEE
+
+```{r}
+# 3) Fit the GEE on the filtered data
+gee_model_controls <- glmgee(
+  form_controls,
+  id     = ResponseId,          
+  family = poisson(link = "log"),
+  data   = dat,
+  corstr = "exchangeable",
+  na.action = na.omit,
+)
+
+summary(gee_model_controls)
+```
+
+#### cook's distance
+
+```{r}
+# Calculate Cook's Distance for participants (clusters)
+cd_cl_mat <- cooks.distance(
+  gee_model_controls,
+  method  = "full",
+  level   = "clusters",
+  plot.it = FALSE
+)
+
+# Extract numeric values
+cd_cl <- as.numeric(cd_cl_mat[, 1])
+
+# Get the participant IDs in the exact order glmgee used
+cluster_ids <- unique(gee_model_controls$id)
+
+# Build the table
+cooks_table <- data.frame(
+  ResponseId = cluster_ids,
+  CooksD     = cd_cl
+)
+
+# Add a cutoff flag
+cutoff <- 4 / length(cluster_ids)
+cooks_table$Flag <- cooks_table$CooksD > cutoff
+
+# Show the flagged participants
+subset(cooks_table, Flag)
+```
+
+### rerun model
+
+hide z, and ci for estimate.
+
+controls to include:
+
+age, sex, need for cognition, narcissism (trend)
+
+```{r}
+levels(gee_long_shared$InfoType)
+# levels(gee_long_shared$InfoImportance)
+```
+
+## COM-Poisson
+
+```{r}
+model_mixedCOM <- glmmTMB(form_mixed,
+               family = compois(),
+               data = dat
+)
+
+summary(model_mixedCOM)
+```
+
+## ---End of Page---
+
+```{r}
+print("All done!")
+```

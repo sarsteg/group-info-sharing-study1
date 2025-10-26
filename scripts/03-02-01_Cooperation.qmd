@@ -1,0 +1,727 @@
+---
+title: "cooperation"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+```{r}
+#| message: false
+#| warning: false
+library(lsr)
+library(emmeans)
+library(yarrr)
+library(ggplot2)
+library(car)
+library(dplyr)
+```
+
+## 2. SELF-REPORT STATE COOPERATION
+
+##### 📊 Fig: Cooperation
+
+```{r}
+figure_density_motivation <- ggplot(filtered_data, aes(x = Manipulation_Mean)) +
+  geom_density(alpha = 0.4) +  # transparent overlap
+  theme_classic() +
+  theme(
+    text = element_text(size = 16, family = "serif"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 16, face = "bold"),
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  ) +
+  labs(
+    x = "Competition Scores",
+    y = "Density",
+    fill = "Motivation"
+  )
+
+print(figure_density_motivation)
+```
+
+##### 📊 Fig: Reward Conditions Only
+
+```{r}
+figure_manipulation_check <- ggplot(filtered_data, aes(x = motivation, y = Manipulation_Mean)) +
+  geom_boxplot(outlier.shape = NA) +  # Removes default outliers
+  geom_jitter(width = 0.2, alpha = 0.5, color = "blue") +
+  theme_classic()+
+  theme(
+    text = element_text(size = 16, family = "serif"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 16, face = "bold"),
+    
+    # ✅ These lines control the TICK MARKS
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    
+    # ✅ These restore AXIS LINES that ticks sit on
+    axis.line = element_line(color = "black"),
+    
+    # ✅ Remove background gridlines (APA prefers a clean look)
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )+
+    labs(
+    x = "Reward",
+    y = "Competition Scores"
+  )
+
+print(figure_manipulation_check)
+```
+
+```{r}
+ggsave(
+  "../figures/figure_manipulation_check.png", 
+  plot = figure_manipulation_check, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
+##### 📊 Fig: Reward & Structure
+
+```{r}
+figure_violin_by_structure <- ggplot(
+  filtered_data,
+  aes(x = motivation, y = Manipulation_Mean, fill = motivation)
+) +
+  geom_violin(trim = FALSE, alpha = 0.4) +
+  geom_boxplot(width = 0.12, outlier.shape = NA) +
+  facet_wrap(~ structure) +
+  theme_classic() +
+  theme(
+    text = element_text(size = 16, family = "serif"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 16, face = "bold"),
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    legend.position = "none"
+  ) +
+  labs(x = "Motivation", y = "Competition Scores")
+
+print(figure_violin_by_structure)
+```
+
+### Assumptions
+
+##### DV
+
+```{r}
+# Histogram
+hist(filtered_data$Manipulation_Mean, main = "Histogram of DV", xlab = "DV")
+
+# Density plot
+plot(density(filtered_data$Manipulation_Mean, na.rm = TRUE), main = "Density of DV")
+
+# Boxplot
+boxplot(filtered_data$Manipulation_Mean, main = "Boxplot of DV")
+
+```
+
+distribution appears to be reasonably distributed
+
+##### multicollinearity
+
+```{r}
+m <- glm(Manipulation_Mean ~ Q14.1 + sex + SES_mean + hispanic +
+           NeedCog_Mean + 
+           DirtyDozen_Narcissism +
+           DirtyDozen_Psychopathy +
+           DirtyDozen_Machiavellianism +
+           SVO_angle, 
+         data = filtered_data, 
+         family = gaussian(link = "identity"))
+
+vif(m)
+```
+
+Rule of thumb: VIF \> 5 (some say 10) indicates problematic collinearity.
+
+Only slight tiny issue, but all okay.
+
+##### 📊 Fig: Manipulation_Mean
+
+check all of the control variables with the state measure, with within participants variable.
+
+```{r}
+# Check variable
+
+# Histogram
+hist(filtered_data$Manipulation_Mean, main = "Distribution of Outcome", xlab = "Outcome Variable")
+
+# Density plot
+plot(density(filtered_data$Manipulation_Mean, na.rm = TRUE))
+
+# Q-Q plot
+qqnorm(filtered_data$Manipulation_Mean)
+qqline(filtered_data$Manipulation_Mean)
+
+# Descriptive stats
+describe(filtered_data$Manipulation_Mean)
+```
+
+## linear regression
+
+### ✅ control variables
+
+```{r}
+# Test of the controls
+
+# Basic linear regression
+state_model_controls <- lm(Manipulation_Mean ~ 
+  Q14.1 + sex + SES_mean + hispanic +
+  NeedCog_Mean + DirtyDozen_Narcissism +
+  DirtyDozen_Psychopathy + DirtyDozen_Machiavellianism +
+  SVO_angle, data = filtered_data)
+
+# Summary of results
+summary(state_model_controls)
+```
+
+```{r}
+nobs(state_model_controls)
+```
+
+```{r}
+confint(state_model_controls, level = 0.95)
+```
+
+###### assumptions
+
+```{r}
+model <- state_model_controls
+```
+
+###### linearity
+
+-   The residuals should scatter randomly around the horizontal line (0).
+
+-   If you see curves or systematic patterns, the relationship may not be linear.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Partial residual plots
+car::crPlots(model)
+
+# Or a scatterplot of residuals vs. fitted values
+plot(model, which = 1)  # Residuals vs Fitted
+```
+
+###### homoscedasticity (equal variance of errors)
+
+-   In the plot, points should form a horizontal band (not a funnel shape).
+
+-   For the Breusch–Pagan test, *p* \> .05 means homoscedasticity (good).
+
+```{r}
+plot(model, which = 3)  # Scale-Location plot
+lmtest::bptest(model)   # Breusch-Pagan test
+```
+
+###### normality of errors
+
+-   In the Q–Q plot, points should roughly follow the diagonal line.
+
+-   Shapiro–Wilk test: *p* \> .05 means residuals are approximately normal.
+
+```{r}
+plot(model, which = 2)    # Q-Q plot
+shapiro.test(residuals(model))
+```
+
+###### no multicollinearity
+
+-   VIF \< 5 → acceptable (some use \< 10 as a lenient rule)
+
+-   Tolerance (1/VIF) \> 0.2 → acceptable
+
+-   If a variable has a high VIF, consider removing or combining correlated predictors.
+
+```{r}
+car::vif(model)
+```
+
+control variables that say based on this would be:
+
+-   Machiavellianism
+
+### ✅ full model
+
+```{r}
+# Test of the controls
+
+# Basic linear regression
+state_model <- lm(Manipulation_Mean ~ (structure_number01 * motivation_number01) +
+  DirtyDozen_Machiavellianism,
+  data = filtered_data)
+
+# Summary of results
+summary(state_model)
+```
+
+###### cook's
+
+```{r}
+# Compute Cook's distance
+cooks_d <- cooks.distance(state_model)
+
+# Common cutoff
+cutoff <- 4 / nrow(filtered_data)
+
+which(cooks_d > cutoff)
+
+filtered_data %>%
+  dplyr::mutate(CooksD = cooks_d) %>%
+  dplyr::filter(CooksD > cutoff) %>%
+  dplyr::select(ResponseId, CooksD)
+
+plot(cooks_d, pch = 19, main = "Cook's Distance")
+abline(h = cutoff, col = "red", lty = 2)
+```
+
+###### assumptions
+
+```{r}
+model <- state_model
+```
+
+###### linearity
+
+-   The residuals should scatter randomly around the horizontal line (0).
+
+-   If you see curves or systematic patterns, the relationship may not be linear.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Partial residual plots
+car::residualPlots(model)
+
+# Or a scatterplot of residuals vs. fitted values
+plot(model, which = 1)  # Residuals vs Fitted
+```
+
+###### homoscedasticity
+
+-   In the plot, points should form a horizontal band (not a funnel shape).
+
+-   For the Breusch–Pagan test, *p* \> .05 means homoscedasticity (good).
+
+```{r}
+plot(model, which = 3)  # Scale-Location plot
+lmtest::bptest(model)   # Breusch-Pagan test
+```
+
+###### normality of errors
+
+-   In the Q–Q plot, points should roughly follow the diagonal line.
+
+-   Shapiro–Wilk test: *p* \> .05 means residuals are approximately normal.
+
+```{r}
+plot(model, which = 2)    # Q-Q plot
+shapiro.test(residuals(model))
+```
+
+```{r}
+plot(model, which = 1)        # Residuals vs Fitted (linearity + variance)
+car::qqPlot(model)            # Q-Q plot (tails/skew); better than base
+lmtest::bptest(model)         # Breusch–Pagan for heteroskedasticity
+```
+
+```{r}
+# Identify cases with largest |studentized residuals|
+rstud <- rstudent(model)   # studentized residuals
+which(abs(rstud) > 2)      # commonly flagged as potential outliers
+```
+
+###### no multicollinearity
+
+-   VIF \< 5 → acceptable (some use \< 10 as a lenient rule)
+
+-   Tolerance (1/VIF) \> 0.2 → acceptable
+
+-   If a variable has a high VIF, consider removing or combining correlated predictors.
+
+```{r}
+car::vif(model)
+```
+
+##### outliers
+
+```{r}
+#Update numbers to match the cases flagged above
+filtered_data[c(27, 30, 89), ]
+```
+
+## GLM
+
+### GLM with 3 dirty dozen
+
+```{r}
+state_model_controls_glm <- glm(Manipulation_Mean ~ Q14.1 + sex + SES_mean + hispanic +
+      NeedCog_Mean + DirtyDozen_Narcissism +
+      DirtyDozen_Psychopathy + DirtyDozen_Machiavellianism +
+      SVO_angle,
+    data = filtered_data,
+    family = gaussian(link = "identity"))
+
+summary(state_model_controls_glm)
+```
+
+```{r}
+confint(state_model_controls_glm, level = 0.95)
+```
+
+Outcome of control check -\> DirtyDozen_Machiavellianism was significant
+
+### GLM with conditions and Machiavellianism
+
+```{r}
+state_model_glm <- glm(Manipulation_Mean ~ 
+      (structure_number01 * motivation_number01) +
+      DirtyDozen_Machiavellianism +
+      SVO_angle,
+    data = filtered_data,
+    family = gaussian(link = "identity"))
+
+summary(state_model_glm)
+```
+
+## means by conditions
+
+```{r}
+desc_by_cell("Manipulation_Mean")
+```
+
+###### 📊 Fig: Manipulation Check
+
+```{r}
+figure_manipulation_check_anova <- ggplot(filtered_data, aes(x = structure_rev, y = competition_score, fill = motivation)) +
+  geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
+  geom_jitter(aes(color = motivation), 
+              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75), 
+              alpha = 0.5, size = 2, show.legend = FALSE) +
+    stat_summary(
+    fun = mean,
+    geom = "point",
+    aes(group = motivation),
+    position = position_dodge(width = 0.75),
+    shape = 21,           # Filled circle
+    size = 3,
+    color = "black",
+    fill = "white"        # So it stands out on colored boxplots
+  ) +
+  scale_fill_brewer(palette = "Pastel1") +
+  scale_color_brewer(palette = "Set1") +
+  theme_classic() +
+  theme(
+    text = element_text(size = 25, family = "serif"),
+    axis.title = element_text(size = 25, face = "bold", color = "black"),
+    axis.text = element_text(size = 25, face = "plain", color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    legend.title = element_text(size = 25, color = "black"),
+    legend.text = element_text(size = 25, color = "black")
+  ) +
+  labs(
+    title = "",
+    x = "Group Structure",
+    y = "Score",
+    fill = "Motivation"
+  )
+
+print(figure_manipulation_check_anova)
+```
+
+```{r}
+ggsave(
+  "../figures/figure_manipulation_check_anova.png", 
+  plot = figure_manipulation_check_anova, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
+```{r}
+# # pirate plot based on how participants shared information broken out by condition. 
+# pirateplot(competition_score ~ condition_rev,
+#            data = filtered_data,
+#            main = NULL,  
+#            xlab = "",
+#            ylab = "",
+#            pal = "xmen",
+#            inf.method = "se",
+#            avg.line.fun = mean,
+#            theme = 2)
+
+pirateplot(competition_score ~ condition_rev,
+           data = filtered_data,
+           main = NULL,  
+           xlab = "",
+           ylab = "",
+           yaxt = "n",
+           xaxt = "n",
+           ylim = c(1, 5),
+           gl.col = NA,
+           bty = "n",
+           pal = "xmen",
+           inf.method = "se",
+           avg.line.fun = mean,
+           theme = 2)
+
+axis(side = 2, at = 1:5, labels = 1:5, las = 1)
+box(bty = "l")
+```
+
+## test
+
+```{r}
+# Only significant included, no trends
+# Machiavellianism age sex need for cognition
+
+# Full ANCOVA model
+ancova_model <- aov(
+  Manipulation_Mean ~ (motivation * structure_rev) +
+   DirtyDozen_Machiavellianism,
+  data = filtered_data
+)
+
+# Type I (sequential) sums of squares
+# summary(ancova_model)
+
+# Type III sums of squares (common in ANCOVA reporting)
+library(car)
+Anova(ancova_model, type = 3)
+ancova_typeIII <- Anova(ancova_model, type = 3)
+```
+
+#### estimated means
+
+```{r}
+library(emmeans)
+emmeans(ancova_model, ~ motivation)      # adjusted means by motivation
+emmeans(ancova_model, ~ structure_rev)   # adjusted means by structure
+
+```
+
+#### eta-squared
+
+```{r}
+library(effectsize)
+eta_squared(ancova_typeIII, partial = TRUE)
+
+# Note on the warning: I have approxmately equal group sizes, so Type iii is not an issue
+```
+
+motivation, structure, machiavellianism
+
+#### assumptions
+
+```{r}
+# Scatterplots of DV vs. covariates
+plot(filtered_data$Manipulation_Mean, filtered_data$Q14.1)
+plot(filtered_data$Manipulation_Mean, filtered_data$NeedCog_Mean)
+plot(filtered_data$Manipulation_Mean, filtered_data$DirtyDozen_Machiavellianism)
+
+# Add regression lines for clarity
+library(ggplot2)
+ggplot(filtered_data, aes(x = NeedCog_Mean, y = Manipulation_Mean)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+```
+
+```{r}
+# Extract residuals
+resid_vals <- residuals(ancova_model)
+
+# Histogram + Q-Q plot
+hist(resid_vals)
+qqnorm(resid_vals); qqline(resid_vals)
+
+# Shapiro-Wilk test
+shapiro.test(resid_vals)  # ns p-value → assumption holds
+
+shapiro.test(residuals(ancova_model))  # Shapiro-Wilk test
+
+# How to interpret:
+# 
+# Null hypothesis: Residuals are normally distributed.
+# 
+# ✔️ If p > 0.05: You fail to reject the null → normality is not violated.
+# 
+# ❌ If p < 0.05: You reject the null → indicates non-normality.
+# 
+# Note: The Shapiro test is sensitive to large sample sizes. In large samples, slight non-normality may still yield a small p-value — look at the QQ plot too.
+
+```
+
+```{r}
+library(car)
+leveneTest(Manipulation_Mean ~ motivation * structure_rev, data = filtered_data)
+
+# How to interpret:
+# 
+# Null hypothesis: Variances are equal across all groups.
+# 
+# ✔️ If p > 0.05: You fail to reject the null → meaning that we have equal variances → assumption met.
+
+# ❌ If p < 0.05: You reject the null → meaning that we have unequal variances → assumption violated.
+#
+# If violated, you might:
+# 
+# Use robust ANOVA methods (e.g., Welch’s ANOVA)
+# 
+# Use transformation or bootstrapping
+# 
+# Proceed with caution if your group sizes are roughly equal (ANOVA is robust in that case)
+```
+
+###### 🗑️ 📊 Fig: ANCOVA
+
+```{r}
+# Hold covariates at their sample means (recommended for clarity)
+at_vals <- with(filtered_data, list(
+  Q14.1 = mean(Q14.1, na.rm = TRUE),
+  sex = mean(sex, na.rm = TRUE),                       # if coded 0/1, this is the sample proportion female=1
+  NeedCog_Mean = mean(NeedCog_Mean, na.rm = TRUE),
+  DirtyDozen_Machiavellianism = mean(DirtyDozen_Machiavellianism, na.rm = TRUE)
+))
+
+emm_int <- emmeans(
+  ancova_model,
+  ~ motivation * structure_rev,
+  at = at_vals
+)
+emm_df <- as.data.frame(emm_int)
+
+p_emm <- ggplot(emm_df, aes(x = structure_rev, y = emmean,
+                            color = motivation, group = motivation)) +
+  geom_point(position = position_dodge(width = 0.2), size = 3) +
+  geom_line(position = position_dodge(width = 0.2), linewidth = 0.7) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL),
+                width = 0.08, position = position_dodge(width = 0.2)) +
+  labs(x = "Group structure",
+       y = "Adjusted mean cooperation (ANCOVA)",
+       color = "Motivation",
+       title = "") +
+  theme_classic(base_size = 14)
+
+print(p_emm)
+
+```
+
+```{r}
+# Adjusted means for motivation (averaged over structure; covariates set at means)
+emm_mot <- emmeans(ancova_model, ~ motivation, at = at_vals)
+df_mot  <- as.data.frame(emm_mot)
+
+p_mot <- ggplot(df_mot, aes(x = motivation, y = emmean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.1) +
+  labs(x = "Motivation", y = "Adjusted mean cooperation (ANCOVA)", title = "") +
+  theme_classic(base_size = 14)
+
+# Adjusted means for structure (averaged over motivation; covariates set at means)
+emm_str <- emmeans(ancova_model, ~ structure_rev, at = at_vals)
+df_str  <- as.data.frame(emm_str)
+
+p_str <- ggplot(df_str, aes(x = structure_rev, y = emmean)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.1) +
+  labs(x = "Group structure", y = "Adjusted mean cooperation (ANCOVA)", title = "") +
+  theme_classic(base_size = 14)
+
+# Print either or both:
+print(p_mot)
+print(p_str)
+```
+
+###### 📊 Fig: ANCOVA
+
+```{r}
+figure_manipulation_check_anova <- ggplot(filtered_data, aes(x = structure_rev, y = Manipulation_Mean, fill = motivation)) +
+  geom_boxplot(position = position_dodge(width = 0.75), outlier.shape = NA) +
+  geom_jitter(aes(color = motivation), 
+              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.75), 
+              alpha = 0.5, size = 2, show.legend = FALSE) +
+    stat_summary(
+    fun = mean,
+    geom = "point",
+    aes(group = motivation),
+    position = position_dodge(width = 0.75),
+    shape = 21,           # Filled circle
+    size = 3,
+    color = "black",
+    fill = "white"        # So it stands out on colored boxplots
+  ) +
+  scale_fill_brewer(palette = "Pastel1") +
+  scale_color_brewer(palette = "Set1") +
+    scale_fill_brewer(
+    palette = "Pastel1",
+    labels = c("proself" = "Proself", "prosocial" = "Prosocial")
+  ) +
+  scale_color_brewer(
+    palette = "Set1",
+    labels = c("proself" = "Proself", "prosocial" = "Prosocial")
+  ) +
+  theme_classic() +
+  theme(
+    text = element_text(size = 25, family = "serif"),
+    axis.title = element_text(size = 25, face = "bold", color = "black"),
+    axis.text = element_text(size = 25, face = "plain", color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    legend.title = element_text(size = 25, color = "black"),
+    legend.text = element_text(size = 25, color = "black")
+  ) +
+  scale_x_discrete(labels = c("MTS" = "Intergroup", 
+                            "group" = "Interindividual")) +
+  labs(
+    title = "",
+    x = "Group Structure",
+    y = "Cooperation",
+    fill = "Motivation"
+  )
+
+print(figure_manipulation_check_anova)
+```
+
+## END
+
+```{r}
+print("Success! All code has been run.")
+```

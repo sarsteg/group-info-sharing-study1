@@ -1,0 +1,406 @@
+---
+title: "reasonsForChoices"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+```{r}
+library(psych)
+library(readr)
+library(descr)
+```
+
+## 4. REASONS FOR CHOICES
+
+```{r}
+# EFA for the variables to see how the load
+# Variables are dicotomous
+
+# Create data set with just these items from filtered_data
+reasons_df <- filtered_data %>% 
+  dplyr::select(
+    condition,
+    structure,
+    motivation,
+    REASONS_1,
+    REASONS_2,
+    REASONS_3,
+    REASONS_4,
+    REASONS_5,
+    REASONS_6,
+    REASONS_7,
+    REASONS_8
+  )
+
+head(reasons_df)
+```
+
+### EFA
+
+Not sure what estimation method is going to make this work. it is not running with our errors.
+
+```{r}
+# Convert non-endorsement to 0s rather than as NAs
+reasons_df <- reasons_df %>% 
+    mutate(across(everything(), ~ ifelse(is.na(.), 0, .)))
+```
+
+```{r}
+reasons_df_all <- reasons_df %>% 
+  dplyr::select(REASONS_1:REASONS_8)
+
+reasons_df_ind <-reasons_df %>% 
+  filter(structure == "individual") %>% 
+  dplyr::select(REASONS_1:REASONS_8)
+
+reasons_df_sys <- reasons_df %>% 
+  filter(structure == "group") %>% 
+  dplyr::select(REASONS_1:REASONS_8)
+```
+
+#### 1 factor model
+
+```{r}
+# library(psych)
+
+# Step 1: Compute tetrachoric correlation matrix
+tetra_corr_all <- tetrachoric(reasons_df_all)$rho
+
+# Step 2: Run factor analysis
+fa_result_all <- fa(tetra_corr_all, nfactors = 1, rotate = "oblimin", fm = "minres")
+print(fa_result_all$loadings, cutoff = 0.3)
+
+# Step 3: Run omega to check dimensionality
+omega_result <- omega(tetra_corr_all, nfactors = 2, fm = "minres", rotate = "oblimin")  # adjust nfactors based on your scree/parallel
+
+```
+
+```{r}
+# Set sample size
+n_obs <- nrow(reasons_df_all)
+```
+
+```{r}
+# Parallel analysis and scree plot from tetrachoric matrix
+fa.parallel(tetra_corr_all, fa = "fa", n.obs = nrow(reasons_df_all), fm = "minres", cor = "tet")
+```
+
+the third factor is only a little above the red line so it would make sense to explore having 1 or 2 factors, but not 3
+
+```{r}
+# Eigenvalues
+eigenvalues <- eigen(tetra_corr_all)$values
+
+# Basic plot with axes suppressed
+plot(eigenvalues, type = "b",
+     main = "",
+     xlab = "Factor Number", ylab = "Eigenvalue",
+     pch = 19, cex = 1.2, lwd = 2, col = "black",
+     xaxt = "n", yaxt = "n",  # suppress default axes
+     family = "serif",        # APA-style font
+     cex.main = 1.2, cex.lab = 1.1)
+
+# Add custom x- and y-axes
+axis(1, at = 1:length(eigenvalues), labels = 1:length(eigenvalues))  # Factor numbers
+axis(2, at = seq(0, ceiling(max(eigenvalues)), by = 1))              # Clean y-ticks
+
+# Reference line at eigenvalue = 1
+abline(h = 1, col = "gray50", lty = 2)
+
+
+```
+
+```{r}
+# Create a data frame for plotting
+eigen_df <- data.frame(
+  Factor = 1:length(eigenvalues),
+  Eigenvalue = eigenvalues
+)
+
+scree_plot <- ggplot(eigen_df, aes(x = Factor, y = Eigenvalue)) +
+  geom_line(color = "black", linewidth = 1) +
+  geom_point(shape = 16, size = 3) +
+  geom_hline(yintercept = 1, linetype = "dashed", color = "gray50") +
+  scale_x_continuous(
+  breaks = 1:length(eigenvalues),  # Ensure every number shows
+  labels = 1:length(eigenvalues)
+  ) +
+  labs(
+    title = "",
+    x = "Factor Number",
+    y = "Eigenvalue"
+  ) +
+  theme_classic(base_family = "serif") +  # Classic APA-style theme
+  theme(
+    plot.title = element_text(size = 12, face = "plain", hjust = 0.5),
+    axis.title = element_text(size = 11, face = "bold"),  # BOLD axis titles
+    axis.text = element_text(size = 10),
+    axis.line = element_line(color = "black", linewidth = 0.6),
+    axis.ticks = element_line(color = "black", linewidth = 0.5),
+    panel.grid = element_blank()
+  )
+
+scree_plot
+
+ggsave("../figures/efa_scree_plot.png", plot = scree_plot,
+       width = 6.5, height = 4, units = "in", dpi = 300)
+```
+
+#### Loadings
+
+```{r}
+# Test 1-factor solution
+fa1 <- fa(tetra_corr_all, nfactors = 1, rotate = "none", fm = "wls", n.obs = n_obs)
+cat("1-Factor Solution Loadings:\n")
+print(fa1$loadings, cutoff = 0.3)
+
+# Test 2-factor solution
+fa2 <- fa(tetra_corr_all, nfactors = 2, rotate = "oblimin", fm = "wls", n.obs = n_obs)
+cat("\n2-Factor Solution Loadings:\n")
+print(fa2$loadings, cutoff = 0.3)
+
+# Test 3-factor solution
+fa3 <- fa(tetra_corr_all, nfactors = 3, rotate = "oblimin", fm = "wls", n.obs = n_obs)
+cat("\n3-Factor Solution Loadings:\n")
+print(fa3$loadings, cutoff = 0.3)
+```
+
+#### 2 factor model
+
+```{r}
+# Extract values from 2-factor solution
+eigenvalues <- fa2$Vaccounted["SS loadings", ]
+percent_var <- fa2$Vaccounted["Proportion Var", ] * 100
+cumulative_var <- fa2$Vaccounted["Cumulative Var", ] * 100
+
+# Create a table rounded to 4 decimals
+summary_table <- data.frame(
+  Factor = 1:2,
+  Eigenvalue = round(eigenvalues, 4),
+  Percent_of_Variance = round(percent_var, 4),
+  Cumulative_Percent = round(cumulative_var, 4)
+)
+
+# View the table
+summary_table
+
+```
+
+```{r}
+# # Extract values from 3-factor solution
+# eigenvalues <- fa3$Vaccounted["SS loadings", ]
+# percent_var <- fa3$Vaccounted["Proportion Var", ] * 100
+# cumulative_var <- fa3$Vaccounted["Cumulative Var", ] * 100
+# 
+# # Create a table rounded to 4 decimals
+# summary_table <- data.frame(
+#   Factor = 1:3,
+#   Eigenvalue = round(eigenvalues, 4),
+#   Percent_of_Variance = round(percent_var, 4),
+#   Cumulative_Percent = round(cumulative_var, 4)
+# )
+# 
+# # View the table
+# summary_table
+
+```
+
+```{r}
+fa2$communality
+
+```
+
+```{r}
+# Test 2-factor solution
+fa2 <- fa(tetra_corr_all, nfactors = 2, rotate = "oblimin", fm = "wls")
+
+# Round loadings to 2 decimals
+rounded_loadings <- round(as.matrix(fa2$loadings), 2)
+
+# Suppress small loadings (absolute value < 0.3)
+rounded_loadings[abs(rounded_loadings) < 0.3] <- NA
+
+# Print cleanly without quote argument
+print(rounded_loadings, na.print = "")
+
+```
+
+#### Compare fa1 and fa2 models
+
+```{r}
+# chi-square
+fa1$STATISTIC
+fa2$STATISTIC
+```
+
+```{r}
+# RMSEA
+fa1$RMSEA
+fa2$RMSEA
+```
+
+```{r}
+# BIC
+fa1$BIC
+fa2$BIC
+```
+
+```{r}
+# model_comparison <- data.frame(
+#   Factors = 1:3,
+#   Chi_Square = c(fa1$STATISTIC, fa2$STATISTIC, fa3$STATISTIC),
+#   RMSEA = c(fa1$RMSEA[1], fa2$RMSEA[1], fa3$RMSEA[1]),
+#   BIC = c(fa1$BIC, fa2$BIC, fa3$BIC)
+# )
+# print(model_comparison)
+```
+
+### Scaling
+
+```{r}
+describe(reasons_df)
+```
+
+#### fa1
+
+```{r}
+reasons_fa1_items <- reasons_df_all[, c(
+  "REASONS_1", 
+  "REASONS_4", 
+  "REASONS_5", 
+  "REASONS_6",
+  "REASONS_7", 
+  "REASONS_8"
+  )]
+```
+
+```{r}
+reasons_fa1_alpha <- psych::alpha(reasons_fa1_items)
+print(reasons_fa1_alpha)
+```
+
+#### fa2
+
+```{r}
+# Factor 1: Cooperative Motives
+reasons_coop_items <- reasons_df_all[, c("REASONS_2", "REASONS_3", "REASONS_7")]
+
+# Factor 2: Strategic Motives
+reasons_strategic_items <- reasons_df_all[, c("REASONS_4", "REASONS_5", "REASONS_8")]
+```
+
+```{r}
+# ALPHA with recoded 3 with 458
+# Cooperative Motives
+reasons_coop_alpha <- psych::alpha(reasons_coop_items)
+print(reasons_coop_alpha)
+```
+
+```{r}
+# Strategic Motives
+reasons_strategic_alpha <- psych::alpha(reasons_strategic_items)
+print(reasons_strategic_alpha)
+```
+
+```{r}
+# Calculate summary score for participants
+filtered_data <- filtered_data %>%
+  mutate(reasons_strategy_score = rowSums(dplyr::select(., REASONS_4, REASONS_5, REASONS_8), na.rm = TRUE))
+```
+
+```{r}
+# Correlation between factors for fa2
+fa2$Phi  
+```
+
+### Split between competition (.62) and cooperation (.40)
+
+```{r}
+# reasons_coop_mean
+# reasons_comp_mean 
+reasons_cooperation_items <- filtered_data %>% 
+  dplyr::select(REASONS_1, REASONS_2, REASONS_3)
+
+reasons_competition_items <- filtered_data %>% 
+  dplyr::select(REASONS_4, REASONS_5, REASONS_6, REASONS_7, REASONS_8)
+```
+
+```{r}
+alpha_reasons_cooperation <- psych::alpha(reasons_cooperation_items)
+alpha_reasons_competition <- psych::alpha(reasons_competition_items)
+```
+
+```{r}
+print(alpha_reasons_cooperation)
+```
+
+```{r}
+print(alpha_reasons_competition)
+```
+
+```{r}
+# # Drop REASONS_6 & _7
+# reasons_competition_items <- reasons_competition_items %>% 
+#   dplyr::select(
+#     -REASONS_6, 
+#     -REASONS_7
+#   )
+# 
+# alpha_reasons_competition <- psych::alpha(reasons_competition_items)
+# print(alpha_reasons_competition)
+```
+
+### Reversed cooperation with competition (skip)
+
+```{r}
+reasons_matched <- filtered_data %>% 
+  dplyr::select(REASONS_1:REASONS_8)
+
+reasons_matched <- reasons_matched %>%
+  mutate(
+    REASONS_1_rev = ifelse(REASONS_1 == 1, 0,
+                    ifelse(REASONS_1 == 0, 1, NA)),
+    REASONS_2_rev = ifelse(REASONS_2 == 1, 0,
+                    ifelse(REASONS_2 == 0, 1, NA)),
+    REASONS_3_rev = ifelse(REASONS_3 == 1, 0,
+                    ifelse(REASONS_3 == 0, 1, NA))
+  )
+
+# View(reasons_matched)
+
+reasons_matched <- reasons_matched %>% 
+  dplyr::select(
+    -REASONS_1,
+    -REASONS_2,
+    -REASONS_3
+  )
+```
+
+```{r}
+alpha_reasons_matched <- psych::alpha(reasons_matched, check.keys = TRUE)
+print(alpha_reasons_matched)
+```
+
+```{r}
+alpha_reasons_matched$item.stats
+```
+
+### 4 items 3, 4, 5, 8 (alpha = .77)
+
+```{r}
+reasons_3458 <- filtered_data %>% 
+  dplyr::select(
+    REASONS_3, 
+    REASONS_4, 
+    REASONS_5, 
+    REASONS_8
+  )
+
+alpha_reasons_3458 <- psych::alpha(reasons_3458, check.keys = TRUE)
+print(alpha_reasons_3458)
+```

@@ -1,0 +1,427 @@
+---
+title: "descriptives"
+format: html
+---
+
+```{r}
+#| message: false
+#| warning: false
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+```{r}
+#| message: false
+#| warning: false
+library(readr)
+library(descr)
+library(ggplot2)
+library(purrr)
+library(car)
+library(janitor)
+```
+
+## ---- DESCRIPTIVES ----
+
+## Identify variables
+
+##### reasons_vars
+
+```{r}
+# Rationale for choices
+reason_vars <- c(
+  "REASONS_1", "REASONS_2", "REASONS_3", "REASONS_4",
+  "REASONS_5", "REASONS_6", "REASONS_7", "REASONS_8",
+  "reasons_comp_mean", "reasons_coop_mean", "reasons_combined_mean", "reasons_flip_mean"
+)
+```
+
+##### manip_vars
+
+```{r}
+# # List of competition & cooperation variables, for reference
+# comp_items_recoded <- c("RQ16.1_1","RQ16.1_2","RQ16.1_3","RQ16.1_4")
+# comp_items_raw     <- c("Q16.1_1","Q16.1_2","Q16.1_3","Q16.1_4")
+# coop_items_raw     <- c("Q16.1_5","Q16.1_6","Q16.1_7","Q16.1_8")
+
+# state competition & cooperation
+manip_vars <- c(
+  "Manipulation_Coop_Mean",
+  "Manipulation_Comp_Mean",
+  "RManipulation_CoMp_Mean",
+  "Manipulation_Mean"
+)
+
+# Manipulation_Mean calculated from SPSS
+# COMPUTE Manipulation_Mean=MEAN(Manipulation_CooP_Mean,RManipulation_CoMp_Mean).
+# VARIABLE LABELS  Manipulation_Mean 'Mean for cooperation and manipulation again'.
+# EXECUTE.
+```
+
+##### sharing_vars
+
+```{r}
+# sharing from the task, sharing_vars
+sharing_vars <- c(
+  "public_more_shared",
+  "public_less_shared",
+  "private_more_shared",
+  "private_less_shared"
+)
+```
+
+##### NFC_vars
+
+```{r}
+# Need for cognition, NFC_vars
+NFC_vars <- c(
+  "NeedCog_Sum",
+  "NeedCog_Mean"
+)
+```
+
+##### SVO_vars
+
+```{r}
+# social value orientation, SVO_vars
+SVO_vars <- c(
+  "SVO_angle"
+)
+```
+
+##### darktriad_vars
+
+```{r}
+# dark triad, darktriad_vars
+darktriad_vars <- c(
+  "DirtyDozen_Mean"
+)
+```
+
+##### darktriad3_vars
+
+```{r}
+# dark triad, darktriad_vars
+darktriad3_vars <- c(
+  "DirtyDozen_Narcissism",
+  "DirtyDozen_Psychopathy",
+  "DirtyDozen_Machiavellianism"
+)
+```
+
+## Participants
+
+##### sex
+
+1 = male; 2 = female.
+
+```{r}
+freq(as.ordered(filtered_data$Q14.2), plot = FALSE)
+```
+
+##### age
+
+```{r}
+mean(filtered_data$Q14.1, na.rm = TRUE)
+sd(filtered_data$Q14.1, na.rm = TRUE)
+```
+
+The mean age of participants was X years old (SD = X). More women (X%) than men were in the sample. Approximately a quarter of the participants (X%) reported neither parent had attended college.
+
+##### 🧇 Table: Freq table
+
+```{r}
+freq(as.ordered(filtered_data$Q14.2), plot = FALSE)
+freq(as.ordered(filtered_data$Q14.3), plot = FALSE)
+freq(as.ordered(filtered_data$hispanic), plot = FALSE)
+freq(as.ordered(filtered_data$Race), plot = FALSE)
+```
+
+## Create and Run tables
+
+##### reasons for choices
+
+```{r}
+reasoning_descriptives <- summarise_numeric(filtered_data, reason_vars)
+reasoning_descriptives
+```
+
+##### state competition and cooperation
+
+```{r}
+manipulation_descriptives <- summarise_numeric(filtered_data, "Manipulation_Mean")
+manipulation_descriptives
+```
+
+correlation between the two state sub-scales
+
+```{r}
+#correlation matrix
+
+man_check_var <- c(
+  "RQ16.1_1",
+  "RQ16.1_2",
+  "RQ16.1_3",
+  "RQ16.1_4",
+  "Q16.1_5",
+  "Q16.1_6",
+  "Q16.1_7",
+  "Q16.1_8",
+  "Manipulation_Coop_Mean",
+  "Manipulation_Comp_Mean",
+  "RManipulation_CoMp_Mean",
+  "Manipulation_Mean"
+)
+
+corr_man_check <- corr_table(
+  data = filtered_data,
+  vars = man_check_var,
+  labels = man_check_var,
+  method = "spearman"
+)
+
+corr_man_check
+
+write.csv(corr_man_check, "../tables/corr_man_check.csv", row.names = TRUE)
+```
+
+##### sharing for the task
+
+```{r}
+sharing_descriptives <- summarise_numeric(
+  filtered_data, sharing_vars)
+sharing_descriptives
+```
+
+##### need for cognition
+
+```{r}
+NFC_descriptives <- summarise_numeric(
+  filtered_data, NFC_vars)
+NFC_descriptives
+```
+
+##### social value orientation
+
+```{r}
+SVO_descriptives <- summarise_numeric(
+  filtered_data, SVO_vars)
+SVO_descriptives
+```
+
+##### dark triad
+
+```{r}
+darktriad_descriptives <- summarise_numeric(
+  filtered_data, darktriad3_vars)
+darktriad_descriptives
+```
+
+##### darktriad3
+
+```{r}
+darktriad3_descriptives <- summarise_numeric(
+  filtered_data, darktriad3_vars)
+darktriad3_descriptives
+```
+
+##### 🧇 Table: combine m and sd
+
+```{r}
+descriptives_all_data <- bind_rows(
+  reasoning_descriptives,
+  manipulation_descriptives,
+  sharing_descriptives,
+  NFC_descriptives,
+  SVO_descriptives,
+  darktriad_descriptives
+  )
+
+descriptives_all_data
+
+write_csv(descriptives_all_data, "../tables/descriptives_all_data.csv")
+```
+
+## Outlier
+
+```{r}
+
+```
+
+## Intercorrelations
+
+Correlations among all variables that are included in the study.
+
+##### 🧇 Table: correlation all
+
+```{r}
+# manipulations, items shared, competitiveness, then potential control variables
+corr_all_vars <- c(
+    "structure_number01",
+    "motivation_number01",
+    "public_more_shared",
+    "public_less_shared",
+    "private_more_shared",
+    "private_less_shared",
+    "Manipulation_Mean",
+    "Q14.1",
+    "sex",
+    "SES_mean",
+    "NeedCog_Mean",
+    "DirtyDozen_Narcissism",
+    "DirtyDozen_Psychopathy",
+    "DirtyDozen_Machiavellianism",
+    "SVO_angle"
+  )
+  
+corr_all_label <- c(
+    "Structure",
+    "Motivation",
+    "Common High",
+    "Common Low",
+    "Unique High",
+    "Unique Low",
+    "StateCompCoop",
+    "Age",
+    "Sex",
+    "SES",
+    "NFC",
+    "Narcissism",
+    "Psychopathy",
+    "Machiavellianism",
+    "SVO"
+  )
+
+corr_all_table <- corr_table(
+  data = filtered_data,
+  vars = corr_all_vars,
+  labels = corr_all_label,
+  method = "spearman"
+)
+
+corr_all_table
+
+write_csv(corr_all_table, "../tables/corr_all_table.csv")
+```
+
+##### 🧇 Table: dark triad
+
+```{r}
+# manipulations, items shared, competitiveness, then potential control variables
+corr_darktriad_vars <- c(
+    "DirtyDozen_Narcissism",
+    "DirtyDozen_Psychopathy",
+    "DirtyDozen_Machiavellianism"
+  )
+  
+corr_darktriad_label <- c(
+    "Narcissism",
+    "Psychopathy",
+    "Machiavellianism"
+  )
+
+corr_darktriad_table <- corr_table(
+  data = filtered_data,
+  vars = corr_darktriad_vars,
+  labels = corr_darktriad_label,
+  method = "spearman"
+)
+
+corr_darktriad_table
+```
+
+dark core or dark personality traits, they are related moderately.
+
+### Intentions to Share, Withhold, or Distort (making the case to merge withholding and distorting)
+
+See the GEE model as the data is create there because new variables were created later in the document.
+
+## Conditions comparisons
+
+#### list controls
+
+```{r}
+# "structure_number01",  "motivation_number01",
+controls <- c(
+  "Q14.1",
+  "sex",
+  "SES_mean",   
+  "hispanic",  # demographics / checks first
+  "NeedCog_Mean",              # traits
+  "DirtyDozen_Narcissism",
+  "DirtyDozen_Psychopathy",
+  "DirtyDozen_Machiavellianism",
+  "SVO_angle"
+)
+```
+
+#### descriptives
+
+```{r}
+desc_tbl <- map_dfr(controls, desc_by_cell)
+desc_tbl
+```
+
+#### 🧇 Table: M (SD) of variables by condition
+
+```{r}
+# 1) say the order you want
+var_order <- c(
+  "Q14.1","sex","SES_mean", "hispanic",                # demographics / checks first
+  "NeedCog_Mean",              # traits
+  "DirtyDozen_Narcissism",
+  "DirtyDozen_Psychopathy",
+  "DirtyDozen_Machiavellianism",
+  "SVO_angle"# or wherever you want it
+)
+
+cond_order <- c(                           # put the columns how you want them
+  "individual–prosocial",
+  "individual–proself",
+  "group–prosocial",
+  "group–proself"
+)
+
+# 2) prep, set factor levels for ordering, and pivot wide
+apa_tbl <- desc_tbl %>%
+  mutate(
+    condition = paste(structure, motivation, sep = "–"),
+    condition = factor(condition, levels = cond_order),
+    variable  = factor(variable,  levels = var_order),
+    cell      = sprintf("%.2f (%.2f)", M, SD)
+  ) %>%
+  dplyr::select(variable, condition, cell) %>%
+  tidyr::pivot_wider(names_from = condition, values_from = cell) %>%
+  arrange(variable) %>%                     # rows follow var_order
+  dplyr::select(variable, any_of(cond_order))      # columns follow cond_order
+
+apa_tbl
+```
+
+#### ANOVA results on controls
+
+```{r}
+## --- 4) Run across all control measures
+anova_results <- set_names(lapply(controls, run_two_way_anova), controls)
+
+# ## Example: Need for Cognition results
+# anova_results$NeedCog_Mean$descriptives
+# anova_results$NeedCog_Mean$anova_table
+# anova_results$NeedCog_Mean$eta_sq
+# anova_results$NeedCog_Mean$shapiro
+# anova_results$NeedCog_Mean$levene
+
+## --- 5) Combine outputs across all controls
+anova_table_all <- imap_dfr(anova_results, ~ mutate(.x$anova_table, DV = .y))
+anova_table_all
+
+etas_all <- imap_dfr(anova_results, ~ mutate(.x$eta_sq, DV = .y))
+etas_all
+```
+
+## END
+
+```{r}
+print("Success! All code has been run.")
+```

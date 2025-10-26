@@ -1,0 +1,175 @@
+---
+title: "informationSharingData"
+format: html
+---
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+Control check is at the end because of when the dataframe was ceated: Check to see if any of the control variables were different between the groups.
+
+### \*GEE Model
+
+about this test: <https://bookdown.org/drki_musa/dataanalysis/poisson-regression.html>
+
+#### create dataframe
+
+```{r}
+# geepack
+# Data needs to be modified to long format
+
+# Between variables should be factors
+# Check structure
+str(filtered_data$structure)
+str(filtered_data$motivation)
+str(filtered_data$Q14.1)
+```
+
+```{r}
+# Limit data
+gee_wide <- filtered_data %>% 
+  dplyr::select(
+    "ResponseId",
+    "structure",
+    "motivation", 
+    "public_more_withheld",
+    "public_more_shared",
+    "public_more_distort",
+    "public_less_withheld",
+    "public_less_shared",
+    "public_less_distort",
+    "private_more_withheld",
+    "private_more_shared",
+    "private_more_distort",
+    "private_less_withheld",
+    "private_less_shared",
+    "private_less_distort",
+    "Q14.1",
+    "sex",
+    "SES_mean",
+    "structure_number01", 
+    "motivation_number01", 
+    "NeedCog_Mean", 
+    "DirtyDozen_Narcissism",
+    "DirtyDozen_Psychopathy",
+    "DirtyDozen_Machiavellianism",
+    "DirtyDozen_Mean",
+    "SVO_angle",
+    "Manipulation_Mean",
+    "hispanic"
+  )
+
+gee_long <- gee_wide %>% 
+  pivot_longer(
+    cols = matches("^(public|private)_(more|less)_(shared|withheld|distort)$"),
+    names_to = "Condition",
+    values_to = "Count"
+  ) %>%
+  separate(
+    col = Condition,
+    into = c("InfoType", "InfoImportance", "Behavior"),
+    sep = "_"
+  )
+
+gee_long <- gee_long %>% 
+  mutate(
+    # Repeated-measure factors
+    InfoType        = factor(InfoType,        levels = c("public", "private")),
+    InfoImportance  = factor(InfoImportance,  levels = c("less", "more")),   
+    Behavior        = factor(Behavior,        levels = c("shared","withheld","distort")),
+    # Manipulations
+    structure       = factor(structure),      
+    motivation      = factor(motivation),
+    # ID and controls
+    ResponseId      = factor(ResponseId),
+    Age             = as.numeric(Q14.1),      
+    Sex             = factor(sex),           
+    SES_mean        = as.numeric(SES_mean),
+    NeedCog_Mean    = as.numeric(NeedCog_Mean),
+    DirtyDozen_Narcissism       = as.numeric(DirtyDozen_Narcissism),
+    DirtyDozen_Psychopathy      = as.numeric(DirtyDozen_Psychopathy),
+    DirtyDozen_Machiavellianism = as.numeric(DirtyDozen_Machiavellianism),
+    SVO_angle       = as.numeric(SVO_angle)
+  )
+
+
+gee_long <- gee_long %>% 
+  mutate(Behavior = droplevels(Behavior))
+
+# View(gee_long)
+```
+
+##### gee_long_all_bx
+
+```{r}
+# Create dataframe with all of the bx
+gee_long_all_bx <- gee_long
+
+saveRDS(gee_long_all_bx, "../artifacts/gee_long_all_bx.rds")
+```
+
+##### gee_long_non
+
+```{r}
+# Create dataframe with only distort and withhold
+gee_long_non <- gee_long %>%
+  filter(Behavior != "shared")
+
+gee_long_non <- gee_long_non %>% 
+  mutate(Behavior = droplevels(Behavior))
+
+saveRDS(gee_long_non, "../artifacts/gee_long_non.rds")
+```
+
+##### gee_long_shared
+
+```{r}
+# Create dataframe with only shared
+gee_long_shared <- gee_long %>%
+  filter(Behavior == "shared")
+
+gee_long_shared <- gee_long_shared %>% 
+  mutate(Behavior = droplevels(Behavior))
+
+# str(gee_long_shared)
+# View(gee_long_shared)
+
+saveRDS(gee_long_shared, "../artifacts/gee_long_shared.rds")
+```
+
+```{r}
+colnames(gee_long)
+
+str(gee_long)
+
+colSums(is.na(gee_long))
+```
+
+### descriptives
+
+```{r}
+# SD and Means for all behaviors
+vars_info_sharing_bx <- c(
+  "public_more_withheld",
+  "public_more_shared",
+  "public_more_distort",
+  "public_more",
+  "public_less_withheld",
+  "public_less_shared",
+  "public_less_distort",
+  "public_less",
+  "private_more_withheld",
+  "private_more_shared",
+  "private_more_distort",
+  "private_more",
+  "private_less_withheld",
+  "private_less_shared",
+  "private_less_distort",
+  "private_less"
+)
+
+summarise_numeric(filtered_data, vars_info_sharing_bx)
+```
