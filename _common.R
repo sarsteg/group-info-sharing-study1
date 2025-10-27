@@ -282,6 +282,35 @@ desc_by_cell <- function(var) {
 
 
 
+#---------------------------------------------------------------------------
+
+
+
+
+
+
+desc_by_cell_input <- function(data, group_vars, var) {
+  # data: your dataset (e.g., dat_full)
+  # group_vars: vector of column names to group by (quoted or unquoted)
+  # var: name of the variable to summarize (quoted or unquoted)
+  
+  data %>%
+    group_by(across(all_of(group_vars))) %>%
+    summarise(
+      n  = sum(!is.na(.data[[deparse(substitute(var))]])),
+      M  = mean(.data[[deparse(substitute(var))]], na.rm = TRUE),
+      SD = sd(.data[[deparse(substitute(var))]],   na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(variable = deparse(substitute(var))) %>%
+    relocate(variable)
+}
+
+
+# Example of use: 
+# desc_by_cell_input(dat_full, group_vars = c("structure", "motivation"), var = "Count")
+
+
 
 
 #---------------------------------------------------------------------------
