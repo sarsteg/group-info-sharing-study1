@@ -11,6 +11,13 @@ source("../_common.R")
 
 ```{r}
 library(glmmTMB)
+library(stringr)
+library(insight)
+library(glue)
+library(purrr)
+library(knitr)
+library(scales)
+library(broom)
 ```
 
 ## ---- INFORMATION SHARING TASK ----
@@ -32,6 +39,12 @@ form <- Count ~ (structure_number01 * motivation_number01 *
   Sex + NeedCog_Mean + 
   (1 | ResponseId)
 ```
+
+-   A four-way interaction (structure × motivation × info type × info importance)
+
+-   Two control variables: Sex and Need for Cognition
+
+-   A random intercept for `ResponseId` (individual participants)
 
 ```{r}
 # 2) Build complete-cases dataset for these vars + id
@@ -55,6 +68,46 @@ model_mixedCOM <- glmmTMB(form,
 summary(model_mixedCOM)
 ```
 
+### Interpretation
+
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| Effect                                      | Estimate      | p-value       | Interpretation                                                                                                         |
++=============================================+===============+===============+========================================================================================================================+
+| **InfoImportancemore**                      | -0.85         | \*\*\*        | “More important” info is associated with less sharing                                                                  |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **Sex1**                                    | -0.20         | \*\*          | Women share less                                                                                                       |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **NeedCog_Mean**                            | +0.21         | \*\*\*        | Higher Need for Cognition → higher sharing                                                                             |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **structure × InfoImportance**              | +0.65         | \*            | Structure effect depends on info importance                                                                            |
+|                                             |               |               |                                                                                                                        |
+|                                             |               |               | Intergroup settings increase sharing when information is more important.                                               |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **motivation × InfoImportance**             | +0.96         | \*\*\*        | Motivation effect depends on info importance                                                                           |
+|                                             |               |               |                                                                                                                        |
+|                                             |               |               | Prosocial motivation increases sharing especially when info is more important.                                         |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **InfoType × InfoImportance**               | +0.58         | \*            | Public/private interacts with importance                                                                               |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **structure × motivation × InfoImportance** | -1.31         | \*\*\*        | When info is *more important*, the combined effect of structure × motivation reverses direction (negative synergy)     |
+|                                             |               |               |                                                                                                                        |
+|                                             |               |               | In important contexts, the prosocial boost is smaller (or reverses) for groups.                                        |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **structure × InfoType × InfoImportance**   | -1.12         | \*\*          | Similar pattern: structural and type effects flip for important info                                                   |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **motivation × InfoType × InfoImportance**  | -0.72         | \*            | Same idea — combined effects are negative when info is important                                                       |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+| **4-way interaction**                       | +1.34         | \*            | The pattern across all variables shifts depending on all four conditions (most complex interaction)                    |
+|                                             |               |               |                                                                                                                        |
+|                                             |               |               | This reversal is moderated: in private + important contexts, being intergroup × prosocial does increase sharing again. |
++---------------------------------------------+---------------+---------------+------------------------------------------------------------------------------------------------------------------------+
+
+The significant three- and four-way interactions suggest:
+
+-   Effects of structure and motivation on sharing depend on both the type of information (public vs. private) and its importance (more vs. less important).
+
+-   The negative 3-way terms and positive 4-way term imply compensatory effects — e.g., under certain conditions (private + important + high motivation), one variable’s influence flips direction.
+
 ## Models by Information Type
 
 ### Setup
@@ -69,55 +122,273 @@ form_limit <- Count ~ (structure_number01 * motivation_number01) +
 vars_needed <- c("ResponseId", all.vars(form_limit))
 ```
 
-### High & Private
+#### InfoType, public private
 
 ```{r}
-dat_high_private <- gee_long_shared %>%
-  filter(InfoImportance = 1 & InfoType = 1)
+glimpse(dat_full$InfoType)
+# public
+# private
+```
+
+#### InfoImport, less more
+
+```{r}
+glimpse(dat_full$InfoImportance)
+# less
+# more
+```
+
+#### structure
+
+```{r}
+filtered_data <- readRDS("../artifacts/filtered_data.rds")
+```
+
+```{r}
+head(filtered_data[c("structure", "structure_number01")])
+# 0 = interindividual
+# 1 = intergroup
+```
+
+```{r}
+# structure(filtered_data$structure)
+```
+
+#### motivation
+
+```{r}
+head(filtered_data[c("motivation", "motivation_number01")])
+```
+
+```{r}
+glimpse(dat_full$motivation_number01)
+# 0 = proself
+# 1 = prosocial
+```
+
+### High & Private
+
+#### data
+
+```{r}
+dat_more_private <- gee_long_shared %>%
+  filter(InfoImportance == "more" & InfoType == "private") %>%
   mutate(across(where(is.character), factor)) %>%
   dplyr::select(all_of(vars_needed)) %>%
   filter(complete.cases(.)) %>%
   droplevels()
 ```
 
+#### model
+
 ```{r}
-model_mixedCOM <- glmmTMB(form_limit,
+model_mixedCOM_mp <- glmmTMB(form_limit,
                family = compois(),
-               data = dat_full
+               data = dat_more_private
 )
 
-summary(model_mixedCOM)
+summary(model_mixedCOM_mp)
 ```
 
 ### High & Common
 
+#### data
+
 ```{r}
-model_mixedCOM <- glmmTMB(form_limit,
+dat_more_public <- gee_long_shared %>%
+  filter(InfoImportance == "more" & InfoType == "public") %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+#### model
+
+```{r}
+model_mixedCOM_mc <- glmmTMB(form_limit,
                family = compois(),
-               data = dat_full
+               data = dat_more_public
 )
 
-summary(model_mixedCOM)
+summary(model_mixedCOM_mc)
 ```
 
 ### Low & Private
 
+#### data
+
 ```{r}
-model_mixedCOM <- glmmTMB(form_limit,
+dat_less_private <- gee_long_shared %>%
+  filter(InfoImportance == "less" & InfoType == "private") %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+#### model
+
+```{r}
+model_mixedCOM_lp <- glmmTMB(form_limit,
                family = compois(),
-               data = dat_full
+               data = dat_less_private
 )
 
-summary(model_mixedCOM)
+summary(model_mixedCOM_lp)
 ```
 
 ### Low & Common
 
+#### data
+
 ```{r}
-model_mixedCOM <- glmmTMB(form_limit,
+dat_less_public <- gee_long_shared %>%
+  filter(InfoImportance == "less" & InfoType == "public") %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+#### model
+
+```{r}
+model_mixedCOM_lc <- glmmTMB(form_limit,
                family = compois(),
-               data = dat_full
+               data = dat_less_public
 )
 
-summary(model_mixedCOM)
+summary(model_mixedCOM_lc)
 ```
+
+## ---End---
+
+```{r}
+# End of section
+```
+
+## Interpretation
+
+Structure: \# 0 = interindividual \# 1 = intergroup
+
+Motivation: \# 0 = proself \# 1 = prosocial
+
+### More Private (`dat_more_private`)
+
+| Effect              | Est   | p   |
+|---------------------|-------|-----|
+| motivation_number01 | +0.51 | \*  |
+| Sex1                | -0.35 | \*  |
+
+➡️ In the *more private* condition, motivation increases counts, and women have lower counts.
+
+### More Public (`dat_more_public`)
+
+| Effect                 | Est   | p      |
+|------------------------|-------|--------|
+| structure_number01     | +0.63 | \*\*   |
+| motivation_number01    | +0.98 | \*\*\* |
+| structure × motivation | -1.04 | \*\*\* |
+| Sex1                   | -0.45 | \*\*   |
+| NeedCog_Mean           | +0.31 | \*\*   |
+
+In the *more public* condition:
+
+-   Both structure and motivation increase counts individually.
+
+-   But together, their interaction is negative, suggesting diminishing returns (when both are high, the effect drops).
+
+-   Again, Need for Cognition → higher counts; Sex1 (women) → fewer counts.
+
+### Less Private (`dat_less_private`)
+
+| Effect              | Est   | p    |
+|---------------------|-------|------|
+| motivation_number01 | +0.29 | \*   |
+| NeedCog_Mean        | +0.27 | \*\* |
+
+In *less private* settings:
+
+-   Motivation alone drives higher counts.
+
+-   Need for Cognition remains a consistent positive predictor.
+
+### Less Public (`dat_less_public`)
+
+| Effect       | Est   | p   |
+|--------------|-------|-----|
+| NeedCog_Mean | +0.19 | \*  |
+
+➡️ In *less public* settings:
+
+-   Only **Need for Cognition** predicts higher counts.
+
+-   Motivation and structure no longer matter here.
+
+### Table
+
++----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| Condition            | Key Drivers                                                                     | Pattern                                                                                                                          |
++======================+=================================================================================+==================================================================================================================================+
+| **More Private**     | Motivation (+), Sex (−)                                                         | People high in motivation share/do more in private contexts; women share less.                                                   |
++----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **More Public**      | Structure (+), Motivation (+), Need for Cognition (+), Sex (−); interaction (−) | Structure and motivation both help, but if both are high, effect drops — possibly due to strategic restraint in public settings. |
++----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **Less Private**     | Motivation (+), Need for Cognition (+)                                          | Motivation and cognition facilitate more behavior.                                                                               |
++----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **Less Public**      | Need for Cognition (+)                                                          | Only thoughtful individuals show higher counts.                                                                                  |
++----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+
+-   Importance, motivation, and Need for Cognition are consistently impactful.
+-   Interactions show that context (public/private, importance) changes how motivation and structure matter.
+-   Sex differences appear primarily in the “more private” and “more public” contexts.
+-   Overdispersion justifies the COM-Poisson model choice.
+-   Participant-level variability is negligible.
+
+## Summary
+
+### Full model
+
+| Interaction term | Estimate | p | Interpretation |
+|----|----|----|----|
+| structure × InfoImportance | +0.65 | \* | Structure increases count **when info is more important**. |
+| motivation × InfoImportance | +0.96 | \*\*\* | Motivation increases count **when info is more important**. |
+| structure × motivation × InfoImportance | −1.31 | \*\*\* | The combined structure+motivation effect reverses when info is more important. |
+| structure × motivation × InfoType × InfoImportance | +1.34 | \* | In the specific context of **private + important** information, structure and motivation jointly enhance counts. |
+
+### Subset models
+
++------------------+------------------------+-------------------------+-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| Condition        | structure              | motivation              | interaction             | takeaway                                                                                                                                  |
++==================+========================+=========================+=========================+===========================================================================================================================================+
+| **More Private** | —                      | **positive, p \< .05**  | ns                      | Motivation drives higher counts in private/important contexts. Structure doesn’t matter much.                                             |
+|                  |                        |                         |                         |                                                                                                                                           |
+|                  |                        |                         |                         | Prosocial participants share more when information is important and private, regardless of structure.                                     |
++------------------+------------------------+-------------------------+-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| **More Public**  | **positive, p \< .01** | **positive, p \< .001** | **negative, p \< .001** | Intergroup and prosocial each promote sharing, but together they reduce it — prosocial motives may be tempered in visible group contexts. |
++------------------+------------------------+-------------------------+-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| **Less Private** | —                      | **positive, p \< .05**  | ns                      | Same pattern: prosocial → higher counts.                                                                                                  |
++------------------+------------------------+-------------------------+-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+| **Less Public**  | —                      | —                       | ns                      | Neither manipulation matters when info is less important and public.                                                                      |
++------------------+------------------------+-------------------------+-------------------------+-------------------------------------------------------------------------------------------------------------------------------------------+
+
+### Story
+
+| Manipulation | Summary pattern | Interpretation |
+|----|----|----|
+| **Motivation** | Consistent positive effect — especially in *private* or *important* contexts | Highly motivated individuals engage more, particularly when stakes or importance are high. |
+| **Structure** | Helps mainly in *public* settings, but not in private ones | Structured environments seem to facilitate sharing/action when visibility is higher. |
+| **Interaction (Structure × Motivation)** | Negative in *more public* condition | When both structure and motivation are high, participants may regulate their behavior — perhaps avoiding appearing overly dominant or competitive. |
+
+-   **Motivation** reliably predicts higher sharing (strongest and most consistent effect).
+
+-   **Structure** matters mostly when the information is **public** or **important**.
+
+<!-- -->
+
+-   When interindividual × prosocial, they act more freely — higher sharing without fear of group reputation loss.
+
+<!-- -->
+
+-   This supports the idea that social visibility moderates how prosocial motivation is expressed in groups, consistent with strategic prosociality or reputation management frameworks.
