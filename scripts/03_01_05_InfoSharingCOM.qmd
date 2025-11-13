@@ -1,6 +1,7 @@
 ---
 title: "03_01_05_InfoSharingCOM"
 format: html
+---e
 ---
 
 ```{r}
@@ -59,6 +60,14 @@ model_mixedCOM <- glmmTMB(form,
 )
 
 summary(model_mixedCOM)
+```
+
+#### anova
+
+```{r}
+model_mixedCOM_ANOVA <- as.data.frame(car::Anova(model_mixedCOM, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_ANOVA
 ```
 
 #### save
@@ -191,6 +200,14 @@ model_mixedCOM_mp <- glmmTMB(form_limit,
 summary(model_mixedCOM_mp)
 ```
 
+#### anova
+
+```{r}
+model_mixedCOM_mp_ANOVA <- as.data.frame(car::Anova(model_mixedCOM_mp, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_mp_ANOVA
+```
+
 #### save
 
 ```{r}
@@ -227,6 +244,14 @@ model_mixedCOM_mc <- glmmTMB(form_limit,
 )
 
 summary(model_mixedCOM_mc)
+```
+
+#### anova
+
+```{r}
+model_mixedCOM_mc_ANOVA <- as.data.frame(car::Anova(model_mixedCOM_mc, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_mc_ANOVA
 ```
 
 #### save
@@ -267,6 +292,14 @@ model_mixedCOM_lp <- glmmTMB(form_limit,
 summary(model_mixedCOM_lp)
 ```
 
+#### anova
+
+```{r}
+model_mixedCOM_lp_ANOVA <- as.data.frame(car::Anova(model_mixedCOM_lp, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_lp_ANOVA
+```
+
 #### save
 
 ```{r}
@@ -303,6 +336,14 @@ model_mixedCOM_lc <- glmmTMB(form_limit,
 )
 
 summary(model_mixedCOM_lc)
+```
+
+#### anova
+
+```{r}
+model_mixedCOM_lc_ANOVA <- as.data.frame(car::Anova(model_mixedCOM_lc, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_lp_ANOVA
 ```
 
 #### save
