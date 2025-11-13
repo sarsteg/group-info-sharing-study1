@@ -12,6 +12,7 @@ source("../_common.R")
 
 ```{r}
 library(glmmTMB)
+library(DHARMa)
 ```
 
 ## ---- INFORMATION SHARING TASK ----
@@ -21,6 +22,8 @@ Based on Model Testing, the only significant controls to the model were:
 -   Need for Cognition
 
 -   Sex
+
+[Vignette for glmmTMB package](https://cran.r-project.org/web/packages/glmmTMB/vignettes/model_evaluation.pdf)
 
 ## Full Model
 
@@ -61,6 +64,23 @@ model_mixedCOM <- glmmTMB(form,
 
 summary(model_mixedCOM)
 ```
+
+#### model checking and diagnotics
+
+```{r}
+model_mixedCOM_simres <- simulateResiduals(model_mixedCOM)
+plot(model_mixedCOM_simres)
+```
+
+Simulated residuals are not uniformly distributed (*p* = .03).
+
+Significant dispersion test (*p* = .04). Model may be over/under dispersed. COM Poisson estimates dispersion.
+
+Outlier test (*p* = .54). No extreme outliers.
+
+Red bands in right plot shows deviations in each quantile. Significant.
+
+Not perfect, but adequate.
 
 #### anova
 
@@ -427,12 +447,17 @@ In *less private* settings:
 
 ### Table
 
-| Condition | Key Drivers | Pattern |
-|----|----|----|
-| **More Private** | Motivation (+), Sex (−) | People high in motivation share/do more in private contexts; women share less. |
-| **More Public** | Structure (+), Motivation (+), Need for Cognition (+), Sex (−); interaction (−) | Structure and motivation both help, but if both are high, effect drops — possibly due to strategic restraint in public settings. |
-| **Less Private** | Motivation (+), Need for Cognition (+) | Motivation and cognition facilitate more behavior. |
-| **Less Public** | Need for Cognition (+) | Only thoughtful individuals show higher counts. |
++------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| Condition        | Key Drivers                                                                     | Pattern                                                                                                                          |
++==================+=================================================================================+==================================================================================================================================+
+| **More Private** | Motivation (+), Sex (−)                                                         | People high in motivation share/do more in private contexts; women share less.                                                   |
++------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **More Public**  | Structure (+), Motivation (+), Need for Cognition (+), Sex (−); interaction (−) | Structure and motivation both help, but if both are high, effect drops — possibly due to strategic restraint in public settings. |
++------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **Less Private** | Motivation (+), Need for Cognition (+)                                          | Motivation and cognition facilitate more behavior.                                                                               |
++------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **Less Public**  | Need for Cognition (+)                                                          | Only thoughtful individuals show higher counts.                                                                                  |
++------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
 
 -   Importance, motivation, and Need for Cognition are consistently impactful.
 -   Interactions show that context (public/private, importance) changes how motivation and structure matter.
@@ -444,12 +469,17 @@ In *less private* settings:
 
 ### Full model
 
-| Interaction term | Estimate | p | Interpretation |
-|----|----|----|----|
-| structure × InfoImportance | +0.65 | \* | Structure increases count **when info is more important**. |
-| motivation × InfoImportance | +0.96 | \*\*\* | Motivation increases count **when info is more important**. |
-| structure × motivation × InfoImportance | −1.31 | \*\*\* | The combined structure+motivation effect reverses when info is more important. |
-| structure × motivation × InfoType × InfoImportance | +1.34 | \* | In the specific context of **private + important** information, structure and motivation jointly enhance counts. |
++----------------------------------------------------+----------+----------+------------------------------------------------------------------------------------------------------------------+
+| Interaction term                                   | Estimate | p        | Interpretation                                                                                                   |
++====================================================+==========+==========+==================================================================================================================+
+| structure × InfoImportance                         | +0.65    | \*       | Structure increases count **when info is more important**.                                                       |
++----------------------------------------------------+----------+----------+------------------------------------------------------------------------------------------------------------------+
+| motivation × InfoImportance                        | +0.96    | \*\*\*   | Motivation increases count **when info is more important**.                                                      |
++----------------------------------------------------+----------+----------+------------------------------------------------------------------------------------------------------------------+
+| structure × motivation × InfoImportance            | −1.31    | \*\*\*   | The combined structure+motivation effect reverses when info is more important.                                   |
++----------------------------------------------------+----------+----------+------------------------------------------------------------------------------------------------------------------+
+| structure × motivation × InfoType × InfoImportance | +1.34    | \*       | In the specific context of **private + important** information, structure and motivation jointly enhance counts. |
++----------------------------------------------------+----------+----------+------------------------------------------------------------------------------------------------------------------+
 
 ### Subset models
 
@@ -469,11 +499,15 @@ In *less private* settings:
 
 ### Story
 
-| Manipulation | Summary pattern | Interpretation |
-|----|----|----|
-| **Motivation** | Consistent positive effect — especially in *private* or *important* contexts | Highly motivated individuals engage more, particularly when stakes or importance are high. |
-| **Structure** | Helps mainly in *public* settings, but not in private ones | Structured environments seem to facilitate sharing/action when visibility is higher. |
-| **Interaction (Structure × Motivation)** | Negative in *more public* condition | When both structure and motivation are high, participants may regulate their behavior — perhaps avoiding appearing overly dominant or competitive. |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Manipulation                             | Summary pattern                                                              | Interpretation                                                                                                                                     |
++==========================================+==============================================================================+====================================================================================================================================================+
+| **Motivation**                           | Consistent positive effect — especially in *private* or *important* contexts | Highly motivated individuals engage more, particularly when stakes or importance are high.                                                         |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Structure**                            | Helps mainly in *public* settings, but not in private ones                   | Structured environments seem to facilitate sharing/action when visibility is higher.                                                               |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Interaction (Structure × Motivation)** | Negative in *more public* condition                                          | When both structure and motivation are high, participants may regulate their behavior — perhaps avoiding appearing overly dominant or competitive. |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
 
 -   **Motivation** reliably predicts higher sharing (strongest and most consistent effect).
 
