@@ -1,0 +1,21 @@
+---
+title: "03_01_05_InfoSharingCOM_Interpret"
+format: html
+---
+
+```{r}
+load("../artifacts/COMPoisson.RData")
+# model_mixedCOM    <- readRDS("outputs/models/model_mixedCOM.rds")
+# model_mixedCOM_mp <- readRDS("outputs/models/model_mixedCOM_mp.rds")
+# model_mixedCOM_mp <- readRDS("outputs/models/model_mixedCOM_mc.rds")
+# model_mixedCOM_mp <- readRDS("outputs/models/model_mixedCOM_lp.rds")
+# model_mixedCOM_mp <- readRDS("outputs/models/model_mixedCOM_lc.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+source("../_common.R")
+```
+
+```{r}
+library(glmmTMB)
+```
+
+## ---COM-Poisson Interpretation---

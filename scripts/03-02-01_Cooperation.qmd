@@ -502,7 +502,7 @@ axis(side = 2, at = 1:5, labels = 1:5, las = 1)
 box(bty = "l")
 ```
 
-## test
+## ANCOVA test
 
 ```{r}
 # Only significant included, no trends

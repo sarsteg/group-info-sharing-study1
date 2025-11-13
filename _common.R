@@ -293,16 +293,18 @@ desc_by_cell_input <- function(data, group_vars, var) {
   # data: your dataset (e.g., dat_full)
   # group_vars: vector of column names to group by (quoted or unquoted)
   # var: name of the variable to summarize (quoted or unquoted)
+  # Accept var as either a symbol (Count) or string ("Count")
+  var_name <- if (is.character(var)) var else deparse(substitute(var))
   
   data %>%
     group_by(across(all_of(group_vars))) %>%
     summarise(
-      n  = sum(!is.na(.data[[deparse(substitute(var))]])),
-      M  = mean(.data[[deparse(substitute(var))]], na.rm = TRUE),
-      SD = sd(.data[[deparse(substitute(var))]],   na.rm = TRUE),
+      n  = sum(!is.na(.data[[var_name]])),
+      M  = mean(.data[[var_name]], na.rm = TRUE),
+      SD = sd(.data[[var_name]],  na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    mutate(variable = deparse(substitute(var))) %>%
+    mutate(variable = var_name) %>%
     relocate(variable)
 }
 
