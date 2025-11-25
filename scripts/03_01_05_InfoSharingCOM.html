@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.39">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>03_01_05_InfoSharingCOM</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="03_01_05_InfoSharingCOM_files/libs/clipboard/clipboard.min.js"></script>
+<script src="03_01_05_InfoSharingCOM_files/libs/quarto-html/quarto.js"></script>
+<script src="03_01_05_InfoSharingCOM_files/libs/quarto-html/popper.min.js"></script>
+<script src="03_01_05_InfoSharingCOM_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="03_01_05_InfoSharingCOM_files/libs/quarto-html/anchor.min.js"></script>
+<link href="03_01_05_InfoSharingCOM_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="03_01_05_InfoSharingCOM_files/libs/quarto-html/quarto-syntax-highlighting-e26003cea8cd680ca0c55a263523d882.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="03_01_05_InfoSharingCOM_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="03_01_05_InfoSharingCOM_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="03_01_05_InfoSharingCOM_files/libs/bootstrap/bootstrap-8a79a254b8e706d3c925cde0a310d4f0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">03_01_05_InfoSharingCOM</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>gee_long_shared <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"../artifacts/gee_long_shared.rds"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>codebook <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"../artifacts/codebook.rds"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"../_common.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'ggplot2'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:psych':
+
+    %+%, alpha</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmmTMB)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in check_dep_version(dep_pkg = "TMB"): package version mismatch: 
+glmmTMB was built with TMB package version 1.9.17
+Current TMB package version is 1.9.18
+Please re-install glmmTMB from source or restore original 'TMB' package (see '?reinstalling' for more information)</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DHARMa)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>This is DHARMa 0.4.7. For overview type '?DHARMa'. For recent changes, type news(package = 'DHARMa')</code></pre>
+</div>
+</div>
+<section id="information-sharing-task--" class="level2">
+<h2 class="anchored" data-anchor-id="information-sharing-task--">—- INFORMATION SHARING TASK —-</h2>
+<p>Based on Model Testing, the only significant controls to the model were:</p>
+<ul>
+<li><p>Need for Cognition</p></li>
+<li><p>Sex</p></li>
+</ul>
+<p><a href="https://cran.r-project.org/web/packages/glmmTMB/vignettes/model_evaluation.pdf">Vignette for glmmTMB package</a></p>
+</section>
+<section id="full-model" class="level2">
+<h2 class="anchored" data-anchor-id="full-model">Full Model</h2>
+<section id="setup" class="level3">
+<h3 class="anchored" data-anchor-id="setup">Setup</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co">#1) Identify the variables in the model</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>form <span class="ot">&lt;-</span> Count <span class="sc">~</span> (structure_number01 <span class="sc">*</span> motivation_number01 <span class="sc">*</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  InfoType <span class="sc">*</span> InfoImportance) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  Sex <span class="sc">+</span> NeedCog_Mean <span class="sc">+</span> </span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span> <span class="sc">|</span> ResponseId)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li><p>A four-way interaction (structure × motivation × info type × info importance)</p></li>
+<li><p>Two control variables: Sex and Need for Cognition</p></li>
+<li><p>A random intercept for <code>ResponseId</code> (individual participants)</p></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Build complete-cases dataset for these vars + id</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>vars_needed <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ResponseId"</span>, <span class="fu">all.vars</span>(form))</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>dat_full <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="run" class="level3">
+<h3 class="anchored" data-anchor-id="run">Run</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form,</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_full</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01 * InfoType *  
+    InfoImportance) + Sex + NeedCog_Mean + (1 | ResponseId)
+Data: dat_full
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+   1246.8    1327.4    -603.4    1206.8       396 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance  Std.Dev. 
+ ResponseId (Intercept) 2.061e-09 4.539e-05
+Number of obs: 416, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.601 
+
+Conditional model:
+                                                                          Estimate
+(Intercept)                                                                0.18099
+structure_number01                                                        -0.03621
+motivation_number01                                                       -0.01629
+InfoTypeprivate                                                           -0.29063
+InfoImportancemore                                                        -0.85347
+Sex1                                                                      -0.19859
+NeedCog_Mean                                                               0.20972
+structure_number01:motivation_number01                                     0.24820
+structure_number01:InfoTypeprivate                                         0.19779
+motivation_number01:InfoTypeprivate                                        0.30993
+structure_number01:InfoImportancemore                                      0.65194
+motivation_number01:InfoImportancemore                                     0.95605
+InfoTypeprivate:InfoImportancemore                                         0.58467
+structure_number01:motivation_number01:InfoTypeprivate                    -0.45853
+structure_number01:motivation_number01:InfoImportancemore                 -1.31175
+structure_number01:InfoTypeprivate:InfoImportancemore                     -1.11554
+motivation_number01:InfoTypeprivate:InfoImportancemore                    -0.72099
+structure_number01:motivation_number01:InfoTypeprivate:InfoImportancemore  1.33860
+                                                                          Std. Error
+(Intercept)                                                                  0.21271
+structure_number01                                                           0.16312
+motivation_number01                                                          0.15604
+InfoTypeprivate                                                              0.17201
+InfoImportancemore                                                           0.21394
+Sex1                                                                         0.06790
+NeedCog_Mean                                                                 0.05106
+structure_number01:motivation_number01                                       0.22039
+structure_number01:InfoTypeprivate                                           0.24368
+motivation_number01:InfoTypeprivate                                          0.23019
+structure_number01:InfoImportancemore                                        0.27839
+motivation_number01:InfoImportancemore                                       0.26101
+InfoTypeprivate:InfoImportancemore                                           0.29425
+structure_number01:motivation_number01:InfoTypeprivate                       0.32599
+structure_number01:motivation_number01:InfoImportancemore                    0.35939
+structure_number01:InfoTypeprivate:InfoImportancemore                        0.41331
+motivation_number01:InfoTypeprivate:InfoImportancemore                       0.36400
+structure_number01:motivation_number01:InfoTypeprivate:InfoImportancemore    0.53144
+                                                                          z value
+(Intercept)                                                                 0.851
+structure_number01                                                         -0.222
+motivation_number01                                                        -0.104
+InfoTypeprivate                                                            -1.690
+InfoImportancemore                                                         -3.989
+Sex1                                                                       -2.925
+NeedCog_Mean                                                                4.108
+structure_number01:motivation_number01                                      1.126
+structure_number01:InfoTypeprivate                                          0.812
+motivation_number01:InfoTypeprivate                                         1.346
+structure_number01:InfoImportancemore                                       2.342
+motivation_number01:InfoImportancemore                                      3.663
+InfoTypeprivate:InfoImportancemore                                          1.987
+structure_number01:motivation_number01:InfoTypeprivate                     -1.407
+structure_number01:motivation_number01:InfoImportancemore                  -3.650
+structure_number01:InfoTypeprivate:InfoImportancemore                      -2.699
+motivation_number01:InfoTypeprivate:InfoImportancemore                     -1.981
+structure_number01:motivation_number01:InfoTypeprivate:InfoImportancemore   2.519
+                                                                          Pr(&gt;|z|)
+(Intercept)                                                               0.394840
+structure_number01                                                        0.824316
+motivation_number01                                                       0.916846
+InfoTypeprivate                                                           0.091102
+InfoImportancemore                                                        6.63e-05
+Sex1                                                                      0.003445
+NeedCog_Mean                                                              4.00e-05
+structure_number01:motivation_number01                                    0.260086
+structure_number01:InfoTypeprivate                                        0.416962
+motivation_number01:InfoTypeprivate                                       0.178169
+structure_number01:InfoImportancemore                                     0.019190
+motivation_number01:InfoImportancemore                                    0.000249
+InfoTypeprivate:InfoImportancemore                                        0.046920
+structure_number01:motivation_number01:InfoTypeprivate                    0.159545
+structure_number01:motivation_number01:InfoImportancemore                 0.000262
+structure_number01:InfoTypeprivate:InfoImportancemore                     0.006954
+motivation_number01:InfoTypeprivate:InfoImportancemore                    0.047624
+structure_number01:motivation_number01:InfoTypeprivate:InfoImportancemore 0.011775
+                                                                             
+(Intercept)                                                                  
+structure_number01                                                           
+motivation_number01                                                          
+InfoTypeprivate                                                           .  
+InfoImportancemore                                                        ***
+Sex1                                                                      ** 
+NeedCog_Mean                                                              ***
+structure_number01:motivation_number01                                       
+structure_number01:InfoTypeprivate                                           
+motivation_number01:InfoTypeprivate                                          
+structure_number01:InfoImportancemore                                     *  
+motivation_number01:InfoImportancemore                                    ***
+InfoTypeprivate:InfoImportancemore                                        *  
+structure_number01:motivation_number01:InfoTypeprivate                       
+structure_number01:motivation_number01:InfoImportancemore                 ***
+structure_number01:InfoTypeprivate:InfoImportancemore                     ** 
+motivation_number01:InfoTypeprivate:InfoImportancemore                    *  
+structure_number01:motivation_number01:InfoTypeprivate:InfoImportancemore *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<section id="model-checking-and-diagnotics" class="level4">
+<h4 class="anchored" data-anchor-id="model-checking-and-diagnotics">model checking and diagnotics</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_simres <span class="ot">&lt;-</span> <span class="fu">simulateResiduals</span>(model_mixedCOM)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(model_mixedCOM_simres)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="03_01_05_InfoSharingCOM_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Simulated residuals are not uniformly distributed (<em>p</em> = .03).</p>
+<p>Significant dispersion test (<em>p</em> = .04). Model may be over/under dispersed. COM Poisson estimates dispersion.</p>
+<p>Outlier test (<em>p</em> = .54). No extreme outliers.</p>
+<p>Red bands in right plot shows deviations in each quantile. Significant.</p>
+<p>Not perfect, but adequate.</p>
+</section>
+<section id="anova" class="level4">
+<h4 class="anchored" data-anchor-id="anova">anova</h4>
+<p>Model includes interactions -&gt; use type = “III”</p>
+<p>test = “Wald” would not run -&gt; test = “Chisq”</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                     Chisq Df
+(Intercept)                                                     0.72398496  1
+structure_number01                                              0.04928299  1
+motivation_number01                                             0.01090088  1
+InfoType                                                        2.85479318  1
+InfoImportance                                                 15.91458693  1
+Sex                                                             8.55519460  1
+NeedCog_Mean                                                   16.87171915  1
+structure_number01:motivation_number01                          1.26830062  1
+structure_number01:InfoType                                     0.65886174  1
+motivation_number01:InfoType                                    1.81283166  1
+structure_number01:InfoImportance                               5.48414394  1
+motivation_number01:InfoImportance                             13.41620537  1
+InfoType:InfoImportance                                         3.94823772  1
+structure_number01:motivation_number01:InfoType                 1.97852961  1
+structure_number01:motivation_number01:InfoImportance          13.32183443  1
+structure_number01:InfoType:InfoImportance                      7.28481412  1
+motivation_number01:InfoType:InfoImportance                     3.92320623  1
+structure_number01:motivation_number01:InfoType:InfoImportance  6.34438353  1
+                                                                 Pr(&gt;Chisq)
+(Intercept)                                                    3.948399e-01
+structure_number01                                             8.243157e-01
+motivation_number01                                            9.168461e-01
+InfoType                                                       9.110196e-02
+InfoImportance                                                 6.626603e-05
+Sex                                                            3.445377e-03
+NeedCog_Mean                                                   3.999305e-05
+structure_number01:motivation_number01                         2.600857e-01
+structure_number01:InfoType                                    4.169621e-01
+motivation_number01:InfoType                                   1.781689e-01
+structure_number01:InfoImportance                              1.918971e-02
+motivation_number01:InfoImportance                             2.494598e-04
+InfoType:InfoImportance                                        4.692048e-02
+structure_number01:motivation_number01:InfoType                1.595454e-01
+structure_number01:motivation_number01:InfoImportance          2.623334e-04
+structure_number01:InfoType:InfoImportance                     6.953993e-03
+motivation_number01:InfoType:InfoImportance                    4.762397e-02
+structure_number01:motivation_number01:InfoType:InfoImportance 1.177535e-02</code></pre>
+</div>
+</div>
+</section>
+<section id="save" class="level4">
+<h4 class="anchored" data-anchor-id="save">save</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(model_mixedCOM, </span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">file =</span> <span class="fu">file.path</span>(<span class="st">"../artifacts/model_mixedCOM.rds"</span>)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="interpretation" class="level3">
+<h3 class="anchored" data-anchor-id="interpretation">Interpretation</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 24%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 63%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Effect</th>
+<th>Estimate</th>
+<th>p-value</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>InfoImportancemore</strong></td>
+<td>-0.85</td>
+<td>***</td>
+<td>“More important” info is associated with less sharing</td>
+</tr>
+<tr class="even">
+<td><strong>Sex1</strong></td>
+<td>-0.20</td>
+<td>**</td>
+<td>Women share less</td>
+</tr>
+<tr class="odd">
+<td><strong>NeedCog_Mean</strong></td>
+<td>+0.21</td>
+<td>***</td>
+<td>Higher Need for Cognition → higher sharing</td>
+</tr>
+<tr class="even">
+<td><strong>structure × InfoImportance</strong></td>
+<td>+0.65</td>
+<td>*</td>
+<td><p>Structure effect depends on info importance</p>
+<p>Intergroup settings increase sharing when information is more important.</p></td>
+</tr>
+<tr class="odd">
+<td><strong>motivation × InfoImportance</strong></td>
+<td>+0.96</td>
+<td>***</td>
+<td><p>Motivation effect depends on info importance</p>
+<p>Prosocial motivation increases sharing especially when info is more important.</p></td>
+</tr>
+<tr class="even">
+<td><strong>InfoType × InfoImportance</strong></td>
+<td>+0.58</td>
+<td>*</td>
+<td>Public/private interacts with importance</td>
+</tr>
+<tr class="odd">
+<td><strong>structure × motivation × InfoImportance</strong></td>
+<td>-1.31</td>
+<td>***</td>
+<td><p>When info is <em>more important</em>, the combined effect of structure × motivation reverses direction (negative synergy)</p>
+<p>In important contexts, the prosocial boost is smaller (or reverses) for groups.</p></td>
+</tr>
+<tr class="even">
+<td><strong>structure × InfoType × InfoImportance</strong></td>
+<td>-1.12</td>
+<td>**</td>
+<td>Similar pattern: structural and type effects flip for important info</td>
+</tr>
+<tr class="odd">
+<td><strong>motivation × InfoType × InfoImportance</strong></td>
+<td>-0.72</td>
+<td>*</td>
+<td>Same idea — combined effects are negative when info is important</td>
+</tr>
+<tr class="even">
+<td><strong>4-way interaction</strong></td>
+<td>+1.34</td>
+<td>*</td>
+<td><p>The pattern across all variables shifts depending on all four conditions (most complex interaction)</p>
+<p>This reversal is moderated: in private + important contexts, being intergroup × prosocial does increase sharing again.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The significant three- and four-way interactions suggest:</p>
+<ul>
+<li><p>Effects of structure and motivation on sharing depend on both the type of information (public vs.&nbsp;private) and its importance (more vs.&nbsp;less important).</p></li>
+<li><p>The negative 3-way terms and positive 4-way term imply compensatory effects — e.g., under certain conditions (private + important + high motivation), one variable’s influence flips direction.</p></li>
+</ul>
+</section>
+</section>
+<section id="models-by-importance" class="level2">
+<h2 class="anchored" data-anchor-id="models-by-importance">Models by Importance</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co">#1) Identify the variables in the model</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>form_limit <span class="ot">&lt;-</span> Count <span class="sc">~</span> (structure_number01 <span class="sc">*</span> motivation_number01 <span class="sc">*</span> InfoType) <span class="sc">+</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  Sex <span class="sc">+</span> NeedCog_Mean <span class="sc">+</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span> <span class="sc">|</span> ResponseId)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Build complete-cases dataset for these vars + id</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>vars_needed <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ResponseId"</span>, <span class="fu">all.vars</span>(form_limit))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="more" class="level3">
+<h3 class="anchored" data-anchor-id="more">more</h3>
+<section id="data" class="level4">
+<h4 class="anchored" data-anchor-id="data">data</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>dat_more <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(InfoImportance <span class="sc">==</span> <span class="st">"more"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model" class="level4">
+<h4 class="anchored" data-anchor-id="model">model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_more <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form_limit,</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_more</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM_more)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01 * InfoType) +  
+    Sex + NeedCog_Mean + (1 | ResponseId)
+Data: dat_more
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+      606       646      -291       582       196 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance Std.Dev.
+ ResponseId (Intercept) 0.2197   0.4688  
+Number of obs: 208, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.478 
+
+Conditional model:
+                                                       Estimate Std. Error
+(Intercept)                                             -0.5553     0.4329
+structure_number01                                       0.5851     0.2498
+motivation_number01                                      0.9703     0.2349
+InfoTypeprivate                                          0.2797     0.2152
+Sex1                                                    -0.4486     0.1457
+NeedCog_Mean                                             0.1925     0.1115
+structure_number01:motivation_number01                  -1.0394     0.3234
+structure_number01:InfoTypeprivate                      -0.8955     0.3016
+motivation_number01:InfoTypeprivate                     -0.3885     0.2548
+structure_number01:motivation_number01:InfoTypeprivate   0.8529     0.3806
+                                                       z value Pr(&gt;|z|)    
+(Intercept)                                             -1.283  0.19957    
+structure_number01                                       2.342  0.01917 *  
+motivation_number01                                      4.131  3.6e-05 ***
+InfoTypeprivate                                          1.300  0.19371    
+Sex1                                                    -3.079  0.00208 ** 
+NeedCog_Mean                                             1.727  0.08424 .  
+structure_number01:motivation_number01                  -3.214  0.00131 ** 
+structure_number01:InfoTypeprivate                      -2.969  0.00299 ** 
+motivation_number01:InfoTypeprivate                     -1.525  0.12723    
+structure_number01:motivation_number01:InfoTypeprivate   2.241  0.02503 *  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+</section>
+<section id="anova-1" class="level4">
+<h4 class="anchored" data-anchor-id="anova-1">anova</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_more_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM_more, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_more_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                    Chisq Df   Pr(&gt;Chisq)
+(Intercept)                                      1.645541  1 1.995669e-01
+structure_number01                               5.485703  1 1.917261e-02
+motivation_number01                             17.069099  1 3.604404e-05
+InfoType                                         1.689172  1 1.937102e-01
+Sex                                              9.481166  1 2.075919e-03
+NeedCog_Mean                                     2.981100  1 8.424202e-02
+structure_number01:motivation_number01          10.328654  1 1.309807e-03
+structure_number01:InfoType                      8.812186  1 2.992254e-03
+motivation_number01:InfoType                     2.326027  1 1.272262e-01
+structure_number01:motivation_number01:InfoType  5.022103  1 2.502575e-02</code></pre>
+</div>
+</div>
+</section>
+<section id="table" class="level4">
+<h4 class="anchored" data-anchor-id="table">table</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>dat_more <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  structure_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;               &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]                1.63     1.18
+2 1 [system]               1.26     1.15</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>dat_more <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [proself]               1.16     1.13
+2 1 [prosocial]             1.71     1.17</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dat_more <span class="sc">%&gt;%</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(InfoType) <span class="sc">%&gt;%</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  InfoType mean_value sd_value
+  &lt;fct&gt;         &lt;dbl&gt;    &lt;dbl&gt;
+1 public         1.56     1.21
+2 private        1.35     1.15</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>dat_more <span class="sc">%&gt;%</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01, motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'structure_number01'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   structure_number01 [2]
+  structure_number01 motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]          0 [proself]               1.08     1.05
+2 0 [group]          1 [prosocial]             2.12     1.08
+3 1 [system]         0 [proself]               1.25     1.21
+4 1 [system]         1 [prosocial]             1.28     1.11</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="less" class="level3">
+<h3 class="anchored" data-anchor-id="less">less</h3>
+<section id="data-1" class="level4">
+<h4 class="anchored" data-anchor-id="data-1">data</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>dat_less <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(InfoImportance <span class="sc">==</span> <span class="st">"less"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model-1" class="level4">
+<h4 class="anchored" data-anchor-id="model-1">model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_less <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form_limit,</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_less</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM_less)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01 * InfoType) +  
+    Sex + NeedCog_Mean + (1 | ResponseId)
+Data: dat_less
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+    622.9     663.0    -299.5     598.9       196 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance Std.Dev.
+ ResponseId (Intercept) 0.002001 0.04474 
+Number of obs: 208, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.468 
+
+Conditional model:
+                                                       Estimate Std. Error
+(Intercept)                                             0.01721    0.23614
+structure_number01                                     -0.02771    0.14704
+motivation_number01                                    -0.02753    0.14019
+InfoTypeprivate                                        -0.29133    0.15425
+Sex1                                                   -0.04662    0.08245
+NeedCog_Mean                                            0.22878    0.05994
+structure_number01:motivation_number01                  0.22940    0.19816
+structure_number01:InfoTypeprivate                      0.19735    0.21848
+motivation_number01:InfoTypeprivate                     0.31031    0.20609
+structure_number01:motivation_number01:InfoTypeprivate -0.45759    0.29204
+                                                       z value Pr(&gt;|z|)    
+(Intercept)                                              0.073 0.941918    
+structure_number01                                      -0.188 0.850513    
+motivation_number01                                     -0.196 0.844318    
+InfoTypeprivate                                         -1.889 0.058929 .  
+Sex1                                                    -0.565 0.571805    
+NeedCog_Mean                                             3.817 0.000135 ***
+structure_number01:motivation_number01                   1.158 0.247025    
+structure_number01:InfoTypeprivate                       0.903 0.366380    
+motivation_number01:InfoTypeprivate                      1.506 0.132147    
+structure_number01:motivation_number01:InfoTypeprivate  -1.567 0.117150    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+</section>
+<section id="anova-2" class="level4">
+<h4 class="anchored" data-anchor-id="anova-2">anova</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_less_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM_less, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_less_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                       Chisq Df   Pr(&gt;Chisq)
+(Intercept)                                      0.005308535  1 0.9419177659
+structure_number01                               0.035518573  1 0.8505131541
+motivation_number01                              0.038562633  1 0.8443176734
+InfoType                                         3.567287259  1 0.0589285047
+Sex                                              0.319672512  1 0.5718045200
+NeedCog_Mean                                    14.569690273  1 0.0001350697
+structure_number01:motivation_number01           1.340050688  1 0.2470250294
+structure_number01:InfoType                      0.815906914  1 0.3663796124
+motivation_number01:InfoType                     2.267094129  1 0.1321474757
+structure_number01:motivation_number01:InfoType  2.455011525  1 0.1171503090</code></pre>
+</div>
+</div>
+</section>
+<section id="table-1" class="level4">
+<h4 class="anchored" data-anchor-id="table-1">table</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>dat_less <span class="sc">%&gt;%</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  structure_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;               &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]                1.97     1.06
+2 1 [system]               2.04     1.01</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>dat_less <span class="sc">%&gt;%</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [proself]               1.90     1.06
+2 1 [prosocial]             2.1      1.00</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>dat_less <span class="sc">%&gt;%</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(InfoType) <span class="sc">%&gt;%</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  InfoType mean_value sd_value
+  &lt;fct&gt;         &lt;dbl&gt;    &lt;dbl&gt;
+1 public         2.15    1.05 
+2 private        1.86    0.999</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>dat_less <span class="sc">%&gt;%</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01, motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'structure_number01'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   structure_number01 [2]
+  structure_number01 motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]          0 [proself]               1.88    1.02 
+2 0 [group]          1 [prosocial]             2.05    1.09 
+3 1 [system]         0 [proself]               1.92    1.11 
+4 1 [system]         1 [prosocial]             2.15    0.920</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="models-by-type-and-importance" class="level2">
+<h2 class="anchored" data-anchor-id="models-by-type-and-importance">Models by Type and Importance</h2>
+<section id="setup-1" class="level3">
+<h3 class="anchored" data-anchor-id="setup-1">Setup</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co">#1) Identify the variables in the model</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>form_limit <span class="ot">&lt;-</span> Count <span class="sc">~</span> (structure_number01 <span class="sc">*</span> motivation_number01) <span class="sc">+</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>  Sex <span class="sc">+</span> NeedCog_Mean <span class="sc">+</span> </span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>  (<span class="dv">1</span> <span class="sc">|</span> ResponseId)</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 2) Build complete-cases dataset for these vars + id</span></span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>vars_needed <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"ResponseId"</span>, <span class="fu">all.vars</span>(form_limit))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="infotype-public-private" class="level4">
+<h4 class="anchored" data-anchor-id="infotype-public-private">InfoType, public private</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dat_full<span class="sc">$</span>InfoType)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Factor w/ 2 levels "public","private": 1 1 2 2 1 1 2 2 1 1 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 = public</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 2 = private</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="infoimport-less-more" class="level4">
+<h4 class="anchored" data-anchor-id="infoimport-less-more">InfoImport, less more</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dat_full<span class="sc">$</span>InfoImportance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Factor w/ 2 levels "less","more": 2 1 2 1 2 1 2 1 2 1 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 = less</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 2 = more</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="structure" class="level4">
+<h4 class="anchored" data-anchor-id="structure">structure</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>filtered_data <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"../artifacts/filtered_data.rds"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(filtered_data[<span class="fu">c</span>(<span class="st">"structure"</span>, <span class="st">"structure_number01"</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+  structure  structure_number01
+  &lt;chr&gt;      &lt;dbl+lbl&gt;         
+1 individual 0 [group]         
+2 individual 0 [group]         
+3 individual 0 [group]         
+4 individual 0 [group]         
+5 individual 0 [group]         
+6 individual 0 [group]         </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 0 = interindividual</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 = intergroup</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># structure(filtered_data$structure)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="motivation" class="level4">
+<h4 class="anchored" data-anchor-id="motivation">motivation</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(filtered_data[<span class="fu">c</span>(<span class="st">"motivation"</span>, <span class="st">"motivation_number01"</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 2
+  motivation motivation_number01
+  &lt;fct&gt;      &lt;dbl+lbl&gt;          
+1 proself    0 [proself]        
+2 proself    0 [proself]        
+3 proself    0 [proself]        
+4 proself    0 [proself]        
+5 proself    0 [proself]        
+6 proself    0 [proself]        </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(dat_full<span class="sc">$</span>motivation_number01)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> dbl+lbl [1:416] 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+ @ label        : chr "Numberic version of motivation variable with 0 and 1"
+ @ format.spss  : chr "F8.2"
+ @ display_width: int 21
+ @ labels       : Named num [1:2] 0 1
+  ..- attr(*, "names")= chr [1:2] "proself" "prosocial"</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 0 = proself</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 = prosocial</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="levels-of-variables" class="level4">
+<h4 class="anchored" data-anchor-id="levels-of-variables">levels of variables</h4>
+<p><strong>structure</strong></p>
+<p>0 = interindividual</p>
+<p>1 = intergroup</p>
+<p><strong>motivation</strong></p>
+<p>0 = proself</p>
+<p>1 = prosocial</p>
+<p><strong>type</strong></p>
+<p>public</p>
+<p>private</p>
+<p><strong>importance</strong></p>
+<p>less</p>
+<p>more</p>
+</section>
+</section>
+<section id="highmore-privateunique" class="level3">
+<h3 class="anchored" data-anchor-id="highmore-privateunique">High/More &amp; Private/Unique</h3>
+<section id="data-2" class="level4">
+<h4 class="anchored" data-anchor-id="data-2">data</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>dat_more_private <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(InfoImportance <span class="sc">==</span> <span class="st">"more"</span> <span class="sc">&amp;</span> InfoType <span class="sc">==</span> <span class="st">"private"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model-2" class="level4">
+<h4 class="anchored" data-anchor-id="model-2">model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_mp <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form_limit,</span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_more_private</span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM_mp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01) + Sex + NeedCog_Mean +  
+    (1 | ResponseId)
+Data: dat_more_private
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+    309.1     330.3    -146.6     293.1        96 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance  Std.Dev. 
+ ResponseId (Intercept) 2.091e-09 4.573e-05
+Number of obs: 104, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.832 
+
+Conditional model:
+                                       Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)                             0.31474    0.50079   0.628   0.5297  
+structure_number01                     -0.34555    0.27114  -1.274   0.2025  
+motivation_number01                     0.51113    0.21313   2.398   0.0165 *
+Sex1                                   -0.35405    0.17036  -2.078   0.0377 *
+NeedCog_Mean                            0.03713    0.13560   0.274   0.7842  
+structure_number01:motivation_number01 -0.14747    0.34193  -0.431   0.6663  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+</section>
+<section id="anova-3" class="level4">
+<h4 class="anchored" data-anchor-id="anova-3">anova</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_mp_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM_mp, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_mp_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                            Chisq Df Pr(&gt;Chisq)
+(Intercept)                            0.39500986  1 0.52967769
+structure_number01                     1.62420212  1 0.20250686
+motivation_number01                    5.75156892  1 0.01647394
+Sex                                    4.31925193  1 0.03768348
+NeedCog_Mean                           0.07498785  1 0.78420828
+structure_number01:motivation_number01 0.18601602  1 0.66625335</code></pre>
+</div>
+</div>
+</section>
+<section id="emeans" class="level4">
+<h4 class="anchored" data-anchor-id="emeans">emeans</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="co"># emmeans(model_mixedCOM_mp, poly ~ )</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="save-1" class="level4">
+<h4 class="anchored" data-anchor-id="save-1">save</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(model_mixedCOM_mp,  </span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">file =</span> <span class="fu">file.path</span>(<span class="st">"../artifacts/model_mixedCOM_mp.rds"</span>)</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="table-2" class="level4">
+<h4 class="anchored" data-anchor-id="table-2">table</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>dat_more_private <span class="sc">%&gt;%</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  structure_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;               &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]                1.64     1.19
+2 1 [system]               1.04     1.02</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>dat_more_private <span class="sc">%&gt;%</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb74-6"><a href="#cb74-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [proself]               1.06     1.03
+2 1 [prosocial]             1.6      1.20</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>dat_more_private <span class="sc">%&gt;%</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01, motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'structure_number01'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   structure_number01 [2]
+  structure_number01 motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]          0 [proself]              1.24     1.09 
+2 0 [group]          1 [prosocial]            2        1.19 
+3 1 [system]         0 [proself]              0.875    0.947
+4 1 [system]         1 [prosocial]            1.19     1.08 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="fu">desc_by_cell_input</span>(dat_more_private, <span class="at">group_vars =</span> <span class="fu">c</span>(<span class="st">"structure_number01"</span>, <span class="st">"motivation_number01"</span>), <span class="at">var =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 6
+  variable structure_number01 motivation_number01     n     M    SD
+  &lt;chr&gt;    &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;           &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Count    0 [group]          0 [proself]            25 1.24  1.09 
+2 Count    0 [group]          1 [prosocial]          28 2     1.19 
+3 Count    1 [system]         0 [proself]            24 0.875 0.947
+4 Count    1 [system]         1 [prosocial]          27 1.19  1.08 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="highmore-commonpublic" class="level3">
+<h3 class="anchored" data-anchor-id="highmore-commonpublic">High/More &amp; Common/Public</h3>
+<section id="data-3" class="level4">
+<h4 class="anchored" data-anchor-id="data-3">data</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>dat_more_public <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(InfoImportance <span class="sc">==</span> <span class="st">"more"</span> <span class="sc">&amp;</span> InfoType <span class="sc">==</span> <span class="st">"public"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model-3" class="level4">
+<h4 class="anchored" data-anchor-id="model-3">model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_mc <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form_limit,</span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_more_public</span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM_mc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01) + Sex + NeedCog_Mean +  
+    (1 | ResponseId)
+Data: dat_more_public
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+    312.8     333.9    -148.4     296.8        96 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance  Std.Dev. 
+ ResponseId (Intercept) 6.389e-10 2.528e-05
+Number of obs: 104, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.698 
+
+Conditional model:
+                                       Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)                             -0.8636     0.4512  -1.914 0.055609 .  
+structure_number01                       0.6272     0.2386   2.629 0.008564 ** 
+motivation_number01                      0.9805     0.2213   4.430 9.44e-06 ***
+Sex1                                    -0.4488     0.1468  -3.058 0.002232 ** 
+NeedCog_Mean                             0.3067     0.1144   2.682 0.007313 ** 
+structure_number01:motivation_number01  -1.0432     0.2999  -3.479 0.000504 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+</section>
+<section id="anova-4" class="level4">
+<h4 class="anchored" data-anchor-id="anova-4">anova</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_mc_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM_mc, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_mc_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                           Chisq Df   Pr(&gt;Chisq)
+(Intercept)                             3.663722  1 5.560928e-02
+structure_number01                      6.911669  1 8.563503e-03
+motivation_number01                    19.621929  1 9.437974e-06
+Sex                                     9.348327  1 2.231891e-03
+NeedCog_Mean                            7.194378  1 7.313232e-03
+structure_number01:motivation_number01 12.101190  1 5.038964e-04</code></pre>
+</div>
+</div>
+</section>
+<section id="save-2" class="level4">
+<h4 class="anchored" data-anchor-id="save-2">save</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(model_mixedCOM_mc,  </span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">file =</span> <span class="fu">file.path</span>(<span class="st">"../artifacts/model_mixedCOM_mc.rds"</span>)</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="table-3" class="level4">
+<h4 class="anchored" data-anchor-id="table-3">table</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>dat_more_public <span class="sc">%&gt;%</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  structure_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;               &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]                1.62     1.18
+2 1 [system]               1.49     1.24</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>dat_more_public <span class="sc">%&gt;%</span></span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [proself]               1.27     1.22
+2 1 [prosocial]             1.82     1.14</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a>dat_more_public <span class="sc">%&gt;%</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01, motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'structure_number01'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   structure_number01 [2]
+  structure_number01 motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]          0 [proself]               0.92    0.997
+2 0 [group]          1 [prosocial]             2.25    0.967
+3 1 [system]         0 [proself]               1.62    1.35 
+4 1 [system]         1 [prosocial]             1.37    1.15 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">desc_by_cell_input</span>(dat_more_public, <span class="at">group_vars =</span> <span class="fu">c</span>(<span class="st">"structure_number01"</span>, <span class="st">"motivation_number01"</span>), <span class="at">var =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 6
+  variable structure_number01 motivation_number01     n     M    SD
+  &lt;chr&gt;    &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;           &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Count    0 [group]          0 [proself]            25  0.92 0.997
+2 Count    0 [group]          1 [prosocial]          28  2.25 0.967
+3 Count    1 [system]         0 [proself]            24  1.62 1.35 
+4 Count    1 [system]         1 [prosocial]          27  1.37 1.15 </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="lowless-privateunique" class="level3">
+<h3 class="anchored" data-anchor-id="lowless-privateunique">Low/Less &amp; Private/Unique</h3>
+<section id="data-4" class="level4">
+<h4 class="anchored" data-anchor-id="data-4">data</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a>dat_less_private <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(InfoImportance <span class="sc">==</span> <span class="st">"less"</span> <span class="sc">&amp;</span> InfoType <span class="sc">==</span> <span class="st">"private"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb96-4"><a href="#cb96-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb96-5"><a href="#cb96-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb96-6"><a href="#cb96-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model-4" class="level4">
+<h4 class="anchored" data-anchor-id="model-4">model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_lp <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form_limit,</span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_less_private</span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM_lp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01) + Sex + NeedCog_Mean +  
+    (1 | ResponseId)
+Data: dat_less_private
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+    301.5     322.7    -142.8     285.5        96 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance  Std.Dev. 
+ ResponseId (Intercept) 5.932e-10 2.436e-05
+Number of obs: 104, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.436 
+
+Conditional model:
+                                       Estimate Std. Error z value Pr(&gt;|z|)   
+(Intercept)                            -0.37971    0.32427  -1.171  0.24162   
+structure_number01                      0.17046    0.15864   1.074  0.28260   
+motivation_number01                     0.29157    0.14747   1.977  0.04802 * 
+Sex1                                   -0.11549    0.11558  -0.999  0.31766   
+NeedCog_Mean                            0.27318    0.08511   3.210  0.00133 **
+structure_number01:motivation_number01 -0.21820    0.20970  -1.041  0.29810   
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+</section>
+<section id="anova-5" class="level4">
+<h4 class="anchored" data-anchor-id="anova-5">anova</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_lp_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM_lp, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_lp_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                           Chisq Df  Pr(&gt;Chisq)
+(Intercept)                             1.371139  1 0.241616214
+structure_number01                      1.154545  1 0.282599750
+motivation_number01                     3.909283  1 0.048020071
+Sex                                     0.998564  1 0.317658235
+NeedCog_Mean                           10.302675  1 0.001328375
+structure_number01:motivation_number01  1.082670  1 0.298101028</code></pre>
+</div>
+</div>
+</section>
+<section id="save-3" class="level4">
+<h4 class="anchored" data-anchor-id="save-3">save</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb101"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(model_mixedCOM_lp,  </span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">file =</span> <span class="fu">file.path</span>(<span class="st">"../artifacts/model_mixedCOM_lp.rds"</span>)</span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="table-4" class="level4">
+<h4 class="anchored" data-anchor-id="table-4">table</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>dat_less_private <span class="sc">%&gt;%</span></span>
+<span id="cb102-2"><a href="#cb102-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb102-3"><a href="#cb102-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb102-4"><a href="#cb102-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb102-5"><a href="#cb102-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb102-6"><a href="#cb102-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  structure_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;               &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]                1.85    1.05 
+2 1 [system]               1.86    0.960</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a>dat_less_private <span class="sc">%&gt;%</span></span>
+<span id="cb104-2"><a href="#cb104-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb104-3"><a href="#cb104-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb104-4"><a href="#cb104-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb104-5"><a href="#cb104-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb104-6"><a href="#cb104-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [proself]               1.71    1.04 
+2 1 [prosocial]             1.98    0.952</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a>dat_less_private <span class="sc">%&gt;%</span></span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01, motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb106-6"><a href="#cb106-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'structure_number01'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   structure_number01 [2]
+  structure_number01 motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]          0 [proself]               1.6     1.04 
+2 0 [group]          1 [prosocial]             2.07    1.02 
+3 1 [system]         0 [proself]               1.83    1.05 
+4 1 [system]         1 [prosocial]             1.89    0.892</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb109"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="fu">desc_by_cell_input</span>(dat_less_private, <span class="at">group_vars =</span> <span class="fu">c</span>(<span class="st">"structure_number01"</span>, <span class="st">"motivation_number01"</span>), <span class="at">var =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 6
+  variable structure_number01 motivation_number01     n     M    SD
+  &lt;chr&gt;    &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;           &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Count    0 [group]          0 [proself]            25  1.6  1.04 
+2 Count    0 [group]          1 [prosocial]          28  2.07 1.02 
+3 Count    1 [system]         0 [proself]            24  1.83 1.05 
+4 Count    1 [system]         1 [prosocial]          27  1.89 0.892</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="lowless-commonpublic" class="level3">
+<h3 class="anchored" data-anchor-id="lowless-commonpublic">Low/Less &amp; Common/Public</h3>
+<section id="data-5" class="level4">
+<h4 class="anchored" data-anchor-id="data-5">data</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a>dat_less_public <span class="ot">&lt;-</span> gee_long_shared <span class="sc">%&gt;%</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(InfoImportance <span class="sc">==</span> <span class="st">"less"</span> <span class="sc">&amp;</span> InfoType <span class="sc">==</span> <span class="st">"public"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.character), factor)) <span class="sc">%&gt;%</span></span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="fu">all_of</span>(vars_needed)) <span class="sc">%&gt;%</span></span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">complete.cases</span>(.)) <span class="sc">%&gt;%</span></span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">droplevels</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="model-5" class="level4">
+<h4 class="anchored" data-anchor-id="model-5">model</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_lc <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(form_limit,</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>               <span class="at">family =</span> <span class="fu">compois</span>(),</span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> dat_less_public</span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(model_mixedCOM_lc)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> Family: compois  ( log )
+Formula:          
+Count ~ (structure_number01 * motivation_number01) + Sex + NeedCog_Mean +  
+    (1 | ResponseId)
+Data: dat_less_public
+
+      AIC       BIC    logLik -2*log(L)  df.resid 
+    327.9     349.1    -156.0     311.9        96 
+
+Random effects:
+
+Conditional model:
+ Groups     Name        Variance  Std.Dev. 
+ ResponseId (Intercept) 5.012e-10 2.239e-05
+Number of obs: 104, groups:  ResponseId, 104
+
+Dispersion parameter for compois family (): 0.502 
+
+Conditional model:
+                                       Estimate Std. Error z value Pr(&gt;|z|)  
+(Intercept)                             0.10442    0.31405   0.332   0.7395  
+structure_number01                     -0.03519    0.15121  -0.233   0.8160  
+motivation_number01                    -0.03727    0.14415  -0.258   0.7960  
+Sex1                                    0.01295    0.11604   0.112   0.9111  
+NeedCog_Mean                            0.19262    0.08303   2.320   0.0204 *
+structure_number01:motivation_number01  0.22717    0.20354   1.116   0.2644  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+</section>
+<section id="anova-6" class="level4">
+<h4 class="anchored" data-anchor-id="anova-6">anova</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_lc_ANOVA <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(car<span class="sc">::</span><span class="fu">Anova</span>(model_mixedCOM_lc, <span class="at">type =</span> <span class="st">"III"</span>, <span class="at">test.statistic =</span> <span class="st">"Chisq"</span>))</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a>model_mixedCOM_lp_ANOVA</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                           Chisq Df  Pr(&gt;Chisq)
+(Intercept)                             1.371139  1 0.241616214
+structure_number01                      1.154545  1 0.282599750
+motivation_number01                     3.909283  1 0.048020071
+Sex                                     0.998564  1 0.317658235
+NeedCog_Mean                           10.302675  1 0.001328375
+structure_number01:motivation_number01  1.082670  1 0.298101028</code></pre>
+</div>
+</div>
+</section>
+<section id="save-4" class="level4">
+<h4 class="anchored" data-anchor-id="save-4">save</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(model_mixedCOM_lc,  </span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">file =</span> <span class="fu">file.path</span>(<span class="st">"../artifacts/model_mixedCOM_lc.rds"</span>)</span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="table-5" class="level4">
+<h4 class="anchored" data-anchor-id="table-5">table</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>dat_less_public <span class="sc">%&gt;%</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb117-6"><a href="#cb117-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  structure_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;               &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]                2.09     1.06
+2 1 [system]               2.22     1.05</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a>dat_less_public <span class="sc">%&gt;%</span></span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb119-5"><a href="#cb119-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb119-6"><a href="#cb119-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [proself]               2.08     1.06
+2 1 [prosocial]             2.22     1.05</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb121"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a>dat_less_public <span class="sc">%&gt;%</span></span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(structure_number01, motivation_number01) <span class="sc">%&gt;%</span></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb121-4"><a href="#cb121-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">mean_value =</span> <span class="fu">mean</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb121-5"><a href="#cb121-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sd_value =</span> <span class="fu">sd</span>(Count, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb121-6"><a href="#cb121-6" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>`summarise()` has grouped output by 'structure_number01'. You can override
+using the `.groups` argument.</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 4
+# Groups:   structure_number01 [2]
+  structure_number01 motivation_number01 mean_value sd_value
+  &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;                &lt;dbl&gt;    &lt;dbl&gt;
+1 0 [group]          0 [proself]               2.16    0.943
+2 0 [group]          1 [prosocial]             2.04    1.17 
+3 1 [system]         0 [proself]               2       1.18 
+4 1 [system]         1 [prosocial]             2.41    0.888</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">desc_by_cell_input</span>(dat_less_public, <span class="at">group_vars =</span> <span class="fu">c</span>(<span class="st">"structure_number01"</span>, <span class="st">"motivation_number01"</span>), <span class="at">var =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 4 × 6
+  variable structure_number01 motivation_number01     n     M    SD
+  &lt;chr&gt;    &lt;dbl+lbl&gt;          &lt;dbl+lbl&gt;           &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt;
+1 Count    0 [group]          0 [proself]            25  2.16 0.943
+2 Count    0 [group]          1 [prosocial]          28  2.04 1.17 
+3 Count    1 [system]         0 [proself]            24  2    1.18 
+4 Count    1 [system]         1 [prosocial]          27  2.41 0.888</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="end" class="level2">
+<h2 class="anchored" data-anchor-id="end">—End—</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="fu">save.image</span>(<span class="at">file =</span> <span class="st">"../artifacts/COMPoisson.RData"</span>)</span>
+<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a><span class="co"># End of section</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="interpretation-1" class="level2">
+<h2 class="anchored" data-anchor-id="interpretation-1">Interpretation</h2>
+<p>Structure: # 0 = interindividual # 1 = intergroup</p>
+<p>Motivation: # 0 = proself # 1 = prosocial</p>
+<section id="more-private-dat_more_private" class="level3">
+<h3 class="anchored" data-anchor-id="more-private-dat_more_private">More Private (<code>dat_more_private</code>)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Effect</th>
+<th>Est</th>
+<th>p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>motivation_number01</td>
+<td>+0.51</td>
+<td>*</td>
+</tr>
+<tr class="even">
+<td>Sex1</td>
+<td>-0.35</td>
+<td>*</td>
+</tr>
+</tbody>
+</table>
+<p>➡️ In the <em>more private</em> condition, motivation increases counts, and women have lower counts.</p>
+</section>
+<section id="more-public-dat_more_public" class="level3">
+<h3 class="anchored" data-anchor-id="more-public-dat_more_public">More Public (<code>dat_more_public</code>)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Effect</th>
+<th>Est</th>
+<th>p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>structure_number01</td>
+<td>+0.63</td>
+<td>**</td>
+</tr>
+<tr class="even">
+<td>motivation_number01</td>
+<td>+0.98</td>
+<td>***</td>
+</tr>
+<tr class="odd">
+<td>structure × motivation</td>
+<td>-1.04</td>
+<td>***</td>
+</tr>
+<tr class="even">
+<td>Sex1</td>
+<td>-0.45</td>
+<td>**</td>
+</tr>
+<tr class="odd">
+<td>NeedCog_Mean</td>
+<td>+0.31</td>
+<td>**</td>
+</tr>
+</tbody>
+</table>
+<p>In the <em>more public</em> condition:</p>
+<ul>
+<li><p>Both structure and motivation increase counts individually.</p></li>
+<li><p>But together, their interaction is negative, suggesting diminishing returns (when both are high, the effect drops).</p></li>
+<li><p>Again, Need for Cognition → higher counts; Sex1 (women) → fewer counts.</p></li>
+</ul>
+</section>
+<section id="less-private-dat_less_private" class="level3">
+<h3 class="anchored" data-anchor-id="less-private-dat_less_private">Less Private (<code>dat_less_private</code>)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Effect</th>
+<th>Est</th>
+<th>p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>motivation_number01</td>
+<td>+0.29</td>
+<td>*</td>
+</tr>
+<tr class="even">
+<td>NeedCog_Mean</td>
+<td>+0.27</td>
+<td>**</td>
+</tr>
+</tbody>
+</table>
+<p>In <em>less private</em> settings:</p>
+<ul>
+<li><p>Motivation alone drives higher counts.</p></li>
+<li><p>Need for Cognition remains a consistent positive predictor.</p></li>
+</ul>
+</section>
+<section id="less-public-dat_less_public" class="level3">
+<h3 class="anchored" data-anchor-id="less-public-dat_less_public">Less Public (<code>dat_less_public</code>)</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Effect</th>
+<th>Est</th>
+<th>p</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NeedCog_Mean</td>
+<td>+0.19</td>
+<td>*</td>
+</tr>
+</tbody>
+</table>
+<p>➡️ In <em>less public</em> settings:</p>
+<ul>
+<li><p>Only <strong>Need for Cognition</strong> predicts higher counts.</p></li>
+<li><p>Motivation and structure no longer matter here.</p></li>
+</ul>
+</section>
+<section id="table-6" class="level3">
+<h3 class="anchored" data-anchor-id="table-6">Table</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 10%">
+<col style="width: 34%">
+<col style="width: 55%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Condition</th>
+<th>Key Drivers</th>
+<th>Pattern</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>More Private</strong></td>
+<td>Motivation (+), Sex (−)</td>
+<td>People high in motivation share/do more in private contexts; women share less.</td>
+</tr>
+<tr class="even">
+<td><strong>More Public</strong></td>
+<td>Structure (+), Motivation (+), Need for Cognition (+), Sex (−); interaction (−)</td>
+<td>Structure and motivation both help, but if both are high, effect drops — possibly due to strategic restraint in public settings.</td>
+</tr>
+<tr class="odd">
+<td><strong>Less Private</strong></td>
+<td>Motivation (+), Need for Cognition (+)</td>
+<td>Motivation and cognition facilitate more behavior.</td>
+</tr>
+<tr class="even">
+<td><strong>Less Public</strong></td>
+<td>Need for Cognition (+)</td>
+<td>Only thoughtful individuals show higher counts.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Importance, motivation, and Need for Cognition are consistently impactful.</li>
+<li>Interactions show that context (public/private, importance) changes how motivation and structure matter.</li>
+<li>Sex differences appear primarily in the “more private” and “more public” contexts.</li>
+<li>Overdispersion justifies the COM-Poisson model choice.</li>
+<li>Participant-level variability is negligible.</li>
+</ul>
+</section>
+</section>
+<section id="summary" class="level2">
+<h2 class="anchored" data-anchor-id="summary">Summary</h2>
+<section id="full-model-1" class="level3">
+<h3 class="anchored" data-anchor-id="full-model-1">Full model</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 56%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Interaction term</th>
+<th>Estimate</th>
+<th>p</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>structure × InfoImportance</td>
+<td>+0.65</td>
+<td>*</td>
+<td>Structure increases count <strong>when info is more important</strong>.</td>
+</tr>
+<tr class="even">
+<td>motivation × InfoImportance</td>
+<td>+0.96</td>
+<td>***</td>
+<td>Motivation increases count <strong>when info is more important</strong>.</td>
+</tr>
+<tr class="odd">
+<td>structure × motivation × InfoImportance</td>
+<td>−1.31</td>
+<td>***</td>
+<td>The combined structure+motivation effect reverses when info is more important.</td>
+</tr>
+<tr class="even">
+<td>structure × motivation × InfoType × InfoImportance</td>
+<td>+1.34</td>
+<td>*</td>
+<td>In the specific context of <strong>private + important</strong> information, structure and motivation jointly enhance counts.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="subset-models" class="level3">
+<h3 class="anchored" data-anchor-id="subset-models">Subset models</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 58%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Condition</th>
+<th>structure</th>
+<th>motivation</th>
+<th>interaction</th>
+<th>takeaway</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>More Private</strong></td>
+<td>—</td>
+<td><strong>positive, p &lt; .05</strong></td>
+<td>ns</td>
+<td><p>Motivation drives higher counts in private/important contexts. Structure doesn’t matter much.</p>
+<p>Prosocial participants share more when information is important and private, regardless of structure.</p></td>
+</tr>
+<tr class="even">
+<td><strong>More Public</strong></td>
+<td><strong>positive, p &lt; .01</strong></td>
+<td><strong>positive, p &lt; .001</strong></td>
+<td><strong>negative, p &lt; .001</strong></td>
+<td>Intergroup and prosocial each promote sharing, but together they reduce it — prosocial motives may be tempered in visible group contexts.</td>
+</tr>
+<tr class="odd">
+<td><strong>Less Private</strong></td>
+<td>—</td>
+<td><strong>positive, p &lt; .05</strong></td>
+<td>ns</td>
+<td>Same pattern: prosocial → higher counts.</td>
+</tr>
+<tr class="even">
+<td><strong>Less Public</strong></td>
+<td>—</td>
+<td>—</td>
+<td>ns</td>
+<td>Neither manipulation matters when info is less important and public.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="story" class="level3">
+<h3 class="anchored" data-anchor-id="story">Story</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 29%">
+<col style="width: 54%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Manipulation</th>
+<th>Summary pattern</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Motivation</strong></td>
+<td>Consistent positive effect — especially in <em>private</em> or <em>important</em> contexts</td>
+<td>Highly motivated individuals engage more, particularly when stakes or importance are high.</td>
+</tr>
+<tr class="even">
+<td><strong>Structure</strong></td>
+<td>Helps mainly in <em>public</em> settings, but not in private ones</td>
+<td>Structured environments seem to facilitate sharing/action when visibility is higher.</td>
+</tr>
+<tr class="odd">
+<td><strong>Interaction (Structure × Motivation)</strong></td>
+<td>Negative in <em>more public</em> condition</td>
+<td>When both structure and motivation are high, participants may regulate their behavior — perhaps avoiding appearing overly dominant or competitive.</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><strong>Motivation</strong> reliably predicts higher sharing (strongest and most consistent effect).</p></li>
+<li><p><strong>Structure</strong> matters mostly when the information is <strong>public</strong> or <strong>important</strong>.</p></li>
+<li><p>When interindividual × prosocial, they act more freely — higher sharing without fear of group reputation loss.</p></li>
+<li><p>This supports the idea that social visibility moderates how prosocial motivation is expressed in groups, consistent with strategic prosociality or reputation management frameworks.</p></li>
+</ul>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

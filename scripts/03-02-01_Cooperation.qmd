@@ -375,7 +375,27 @@ car::vif(model)
 filtered_data[c(27, 30, 89), ]
 ```
 
-## GLM
+#### descriptives
+
+```{r}
+filtered_data %>%
+  group_by(structure) %>%
+  summarise(
+    mean_value = mean(Manipulation_Mean, na.rm = TRUE),
+    sd_value = sd(Manipulation_Mean, na.rm = TRUE)
+  )
+```
+
+```{r}
+filtered_data %>%
+  group_by(motivation) %>%
+  summarise(
+    mean_value = mean(Manipulation_Mean, na.rm = TRUE),
+    sd_value = sd(Manipulation_Mean, na.rm = TRUE)
+  )
+```
+
+## ❌GLM
 
 ### GLM with 3 dirty dozen
 
@@ -409,7 +429,7 @@ state_model_glm <- glm(Manipulation_Mean ~
 summary(state_model_glm)
 ```
 
-## means by conditions
+### means by conditions
 
 ```{r}
 desc_by_cell("Manipulation_Mean")
@@ -502,7 +522,7 @@ axis(side = 2, at = 1:5, labels = 1:5, las = 1)
 box(bty = "l")
 ```
 
-## ANCOVA test
+## ❌ANCOVA test
 
 ```{r}
 # Only significant included, no trends
