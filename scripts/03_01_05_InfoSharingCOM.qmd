@@ -1,7 +1,6 @@
 ---
 title: "03_01_05_InfoSharingCOM"
 format: html
----e
 ---
 
 ```{r}
@@ -142,7 +141,161 @@ The significant three- and four-way interactions suggest:
 
 -   The negative 3-way terms and positive 4-way term imply compensatory effects — e.g., under certain conditions (private + important + high motivation), one variable’s influence flips direction.
 
-## Models by Information Type
+## Models by Importance
+
+```{r}
+#1) Identify the variables in the model
+form_limit <- Count ~ (structure_number01 * motivation_number01 * InfoType) +
+  Sex + NeedCog_Mean +
+  (1 | ResponseId)
+
+# 2) Build complete-cases dataset for these vars + id
+vars_needed <- c("ResponseId", all.vars(form_limit))
+```
+
+### more
+
+#### data
+
+```{r}
+dat_more <- gee_long_shared %>%
+  filter(InfoImportance == "more") %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+#### model
+
+```{r}
+model_mixedCOM_more <- glmmTMB(form_limit,
+               family = compois(),
+               data = dat_more
+)
+
+summary(model_mixedCOM_more)
+```
+
+#### anova
+
+```{r}
+model_mixedCOM_more_ANOVA <- as.data.frame(
+  car::Anova(model_mixedCOM_more, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_more_ANOVA
+```
+
+#### table
+
+```{r}
+dat_more %>%
+  group_by(structure_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more %>%
+  group_by(motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more %>%
+  group_by(InfoType) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+### less
+
+#### data
+
+```{r}
+dat_less <- gee_long_shared %>%
+  filter(InfoImportance == "less") %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+#### model
+
+```{r}
+model_mixedCOM_less <- glmmTMB(form_limit,
+               family = compois(),
+               data = dat_less
+)
+
+summary(model_mixedCOM_less)
+```
+
+#### anova
+
+```{r}
+model_mixedCOM_less_ANOVA <- as.data.frame(
+  car::Anova(model_mixedCOM_less, type = "III", test.statistic = "Chisq"))
+
+model_mixedCOM_less_ANOVA
+```
+
+#### table
+
+```{r}
+dat_less %>%
+  group_by(structure_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less %>%
+  group_by(motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less %>%
+  group_by(InfoType) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+## Models by Type and Importance
 
 ### Setup
 
@@ -160,16 +313,16 @@ vars_needed <- c("ResponseId", all.vars(form_limit))
 
 ```{r}
 glimpse(dat_full$InfoType)
-# public
-# private
+# 1 = public
+# 2 = private
 ```
 
 #### InfoImport, less more
 
 ```{r}
 glimpse(dat_full$InfoImportance)
-# less
-# more
+# 1 = less
+# 2 = more
 ```
 
 #### structure
@@ -200,7 +353,33 @@ glimpse(dat_full$motivation_number01)
 # 1 = prosocial
 ```
 
-### High & Private
+#### levels of variables
+
+**structure**
+
+0 = interindividual
+
+1 = intergroup
+
+**motivation**
+
+0 = proself
+
+1 = prosocial
+
+**type**
+
+public
+
+private
+
+**importance**
+
+less
+
+more
+
+### High/More & Private/Unique
 
 #### data
 
@@ -250,6 +429,24 @@ saveRDS(model_mixedCOM_mp,
 
 ```{r}
 dat_more_private %>%
+  group_by(structure_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more_private %>%
+  group_by(motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more_private %>%
   group_by(structure_number01, motivation_number01) %>%
   summarise(
     mean_value = mean(Count, na.rm = TRUE),
@@ -261,7 +458,7 @@ dat_more_private %>%
 desc_by_cell_input(dat_more_private, group_vars = c("structure_number01", "motivation_number01"), var = "Count")
 ```
 
-### High & Common
+### High/More & Common/Public
 
 #### data
 
@@ -304,10 +501,37 @@ saveRDS(model_mixedCOM_mc,
 #### table
 
 ```{r}
+dat_more_public %>%
+  group_by(structure_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more_public %>%
+  group_by(motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_more_public %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
 desc_by_cell_input(dat_more_public, group_vars = c("structure_number01", "motivation_number01"), var = "Count")
 ```
 
-### Low & Private
+### Low/Less & Private/Unique
 
 #### data
 
@@ -350,10 +574,37 @@ saveRDS(model_mixedCOM_lp,
 #### table
 
 ```{r}
+dat_less_private %>%
+  group_by(structure_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less_private %>%
+  group_by(motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less_private %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
 desc_by_cell_input(dat_less_private, group_vars = c("structure_number01", "motivation_number01"), var = "Count")
 ```
 
-### Low & Common
+### Low/Less & Common/Public
 
 #### data
 
@@ -394,6 +645,33 @@ saveRDS(model_mixedCOM_lc,
 ```
 
 #### table
+
+```{r}
+dat_less_public %>%
+  group_by(structure_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less_public %>%
+  group_by(motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+```{r}
+dat_less_public %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE)
+  )
+```
 
 ```{r}
 desc_by_cell_input(dat_less_public, group_vars = c("structure_number01", "motivation_number01"), var = "Count")
@@ -466,12 +744,17 @@ In *less private* settings:
 
 ### Table
 
-| Condition | Key Drivers | Pattern |
-|----|----|----|
-| **More Private** | Motivation (+), Sex (−) | People high in motivation share/do more in private contexts; women share less. |
-| **More Public** | Structure (+), Motivation (+), Need for Cognition (+), Sex (−); interaction (−) | Structure and motivation both help, but if both are high, effect drops — possibly due to strategic restraint in public settings. |
-| **Less Private** | Motivation (+), Need for Cognition (+) | Motivation and cognition facilitate more behavior. |
-| **Less Public** | Need for Cognition (+) | Only thoughtful individuals show higher counts. |
++-----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| Condition             | Key Drivers                                                                     | Pattern                                                                                                                          |
++=======================+=================================================================================+==================================================================================================================================+
+| **More Private**      | Motivation (+), Sex (−)                                                         | People high in motivation share/do more in private contexts; women share less.                                                   |
++-----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **More Public**       | Structure (+), Motivation (+), Need for Cognition (+), Sex (−); interaction (−) | Structure and motivation both help, but if both are high, effect drops — possibly due to strategic restraint in public settings. |
++-----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **Less Private**      | Motivation (+), Need for Cognition (+)                                          | Motivation and cognition facilitate more behavior.                                                                               |
++-----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+| **Less Public**       | Need for Cognition (+)                                                          | Only thoughtful individuals show higher counts.                                                                                  |
++-----------------------+---------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------+
 
 -   Importance, motivation, and Need for Cognition are consistently impactful.
 -   Interactions show that context (public/private, importance) changes how motivation and structure matter.
@@ -483,12 +766,17 @@ In *less private* settings:
 
 ### Full model
 
-| Interaction term | Estimate | p | Interpretation |
-|----|----|----|----|
-| structure × InfoImportance | +0.65 | \* | Structure increases count **when info is more important**. |
-| motivation × InfoImportance | +0.96 | \*\*\* | Motivation increases count **when info is more important**. |
-| structure × motivation × InfoImportance | −1.31 | \*\*\* | The combined structure+motivation effect reverses when info is more important. |
-| structure × motivation × InfoType × InfoImportance | +1.34 | \* | In the specific context of **private + important** information, structure and motivation jointly enhance counts. |
++----------------------------------------------------+----------------+----------------+------------------------------------------------------------------------------------------------------------------+
+| Interaction term                                   | Estimate       | p              | Interpretation                                                                                                   |
++====================================================+================+================+==================================================================================================================+
+| structure × InfoImportance                         | +0.65          | \*             | Structure increases count **when info is more important**.                                                       |
++----------------------------------------------------+----------------+----------------+------------------------------------------------------------------------------------------------------------------+
+| motivation × InfoImportance                        | +0.96          | \*\*\*         | Motivation increases count **when info is more important**.                                                      |
++----------------------------------------------------+----------------+----------------+------------------------------------------------------------------------------------------------------------------+
+| structure × motivation × InfoImportance            | −1.31          | \*\*\*         | The combined structure+motivation effect reverses when info is more important.                                   |
++----------------------------------------------------+----------------+----------------+------------------------------------------------------------------------------------------------------------------+
+| structure × motivation × InfoType × InfoImportance | +1.34          | \*             | In the specific context of **private + important** information, structure and motivation jointly enhance counts. |
++----------------------------------------------------+----------------+----------------+------------------------------------------------------------------------------------------------------------------+
 
 ### Subset models
 
@@ -508,11 +796,15 @@ In *less private* settings:
 
 ### Story
 
-| Manipulation | Summary pattern | Interpretation |
-|----|----|----|
-| **Motivation** | Consistent positive effect — especially in *private* or *important* contexts | Highly motivated individuals engage more, particularly when stakes or importance are high. |
-| **Structure** | Helps mainly in *public* settings, but not in private ones | Structured environments seem to facilitate sharing/action when visibility is higher. |
-| **Interaction (Structure × Motivation)** | Negative in *more public* condition | When both structure and motivation are high, participants may regulate their behavior — perhaps avoiding appearing overly dominant or competitive. |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
+| Manipulation                             | Summary pattern                                                              | Interpretation                                                                                                                                     |
++==========================================+==============================================================================+====================================================================================================================================================+
+| **Motivation**                           | Consistent positive effect — especially in *private* or *important* contexts | Highly motivated individuals engage more, particularly when stakes or importance are high.                                                         |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Structure**                            | Helps mainly in *public* settings, but not in private ones                   | Structured environments seem to facilitate sharing/action when visibility is higher.                                                               |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
+| **Interaction (Structure × Motivation)** | Negative in *more public* condition                                          | When both structure and motivation are high, participants may regulate their behavior — perhaps avoiding appearing overly dominant or competitive. |
++------------------------------------------+------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------+
 
 -   **Motivation** reliably predicts higher sharing (strongest and most consistent effect).
 
