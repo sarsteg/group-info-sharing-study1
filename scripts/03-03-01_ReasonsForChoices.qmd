@@ -79,6 +79,8 @@ vars_reasons_coMp <- c(
 
 ### correlations
 
+Skipped in the paper.
+
 #### all - spearman
 
 ```{r}
@@ -189,6 +191,8 @@ summarise_numeric(filtered_data, vars_reasons_all)
 
 #### frequencies
 
+Reported in the paper.
+
 ```{r}
 # data_reasons_all
 
@@ -256,6 +260,91 @@ apa_tbl <- desc_tbl %>%
   dplyr::select(variable, any_of(cond_order))      # columns follow cond_order
 
 apa_tbl
+```
+
+endorsement by condition, included in the paper.
+
+```{r}
+var_order <- vars_reasons_all
+
+cond_order <- c(                           # put the columns how you want them
+  "individual–prosocial",
+  "individual–proself",
+  "group–prosocial",
+  "group–proself"
+)
+
+apa_tbl <- desc_tbl %>%
+  mutate(
+    condition = paste(structure, motivation, sep = "–"),
+    condition = factor(condition, levels = cond_order),
+    variable  = factor(variable,  levels = var_order),
+    # mean as percentage, no SD
+    cell      = sprintf("%.0f%%", M * 100)
+  ) %>%
+  dplyr::select(variable, condition, cell) %>%
+  tidyr::pivot_wider(names_from = condition, values_from = cell) %>%
+  arrange(variable) %>%
+  dplyr::select(variable, any_of(cond_order))
+
+apa_tbl
+```
+
+## create new variable to count across categories
+
+```{r}
+REASONS_category <- filtered_data
+```
+
+```{r}
+# cooperation
+REASONS_category <- REASONS_category %>%
+  mutate(
+    REASONS_coOp = if_else(
+      if_any(all_of(c("REASONS_1", "REASONS_2", "REASONS_3")), ~ .x == 1),
+      1,
+      0
+    )
+  )
+```
+
+```{r}
+REASONS_category <- REASONS_category %>%
+  mutate(
+    REASONS_coMp = if_else(
+      if_any(all_of(c("REASONS_4", "REASONS_5", "REASONS_6", "REASONS_7", "REASONS_8")), ~ .x == 1),
+      1,
+      0
+    )
+  )
+```
+
+```{r}
+REASONS_category <- REASONS_category %>% 
+  select("REASONS_1", "REASONS_2", "REASONS_3", REASONS_coOp, "REASONS_4", "REASONS_5", "REASONS_6", "REASONS_7", "REASONS_8", REASONS_coMp)
+```
+
+```{r}
+names(REASONS_category)
+# View(REASONS_category)
+```
+
+```{r}
+endorse_freq <- REASONS_category %>%
+  dplyr::select(REASONS_coOp, REASONS_coMp) %>%
+  pivot_longer(
+    cols      = everything(),
+    names_to  = "Item",
+    values_to = "Endorsed"
+  ) %>%
+  group_by(Item) %>%
+  summarise(
+    n_endorsed    = sum(Endorsed == 1, na.rm = TRUE),
+    prop_endorsed = mean(Endorsed == 1, na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+endorse_freq
 ```
 
 #### count
