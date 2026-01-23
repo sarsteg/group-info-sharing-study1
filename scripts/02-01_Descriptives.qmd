@@ -138,6 +138,20 @@ freq(as.ordered(filtered_data$hispanic), plot = FALSE)
 freq(as.ordered(filtered_data$Race), plot = FALSE)
 ```
 
+```{r}
+filtered_data %>%
+  dplyr::count(hispanic, Race) %>%
+  dplyr::group_by(hispanic) %>%
+  dplyr::mutate(prop = n / sum(n))
+```
+
+```{r}
+table(
+  data$group[filtered_data$Race == "White"],
+  data$action[filtered_data$hispanic == "1"]
+)
+```
+
 ## Create and Run tables
 
 ##### reasons for choices
