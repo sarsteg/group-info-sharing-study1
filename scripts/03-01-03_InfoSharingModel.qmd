@@ -90,6 +90,19 @@ summary(model_poisson)
 
 ------------------------------------------------------------------------
 
+```{r}
+model_poisson <- glmgee(
+  form_full,
+  id     = ResponseId,          
+  family = poisson(link = "log"),
+  data   = dat_full,
+  corstr = "Independence",
+  na.action = na.omit,
+)
+
+summary(model_poisson)
+```
+
 ### ❌generalized Poisson regression
 
 A more flexible version of Poisson regression that directly **models dispersion** (both overdispersion and underdispersion).
@@ -109,10 +122,10 @@ A more flexible version of Poisson regression that directly **models dispersion*
 -   Slightly more complex estimation, but interprets similarly (log link, exponentiated coefficients = rate ratios).
 
 ```{r}
-# Fit the Generalized Poisson model
-model_genpoisson <- vglm(form_full,
-                     family = genpoisson(),
-                     data = dat_full)
+# # Fit the Generalized Poisson model
+# model_genpoisson <- vglm(form_full,
+#                      family = genpoisson(),
+#                      data = dat_full)
 ```
 
 **`genpoisson()` isn’t exported in current VGAM builds**. Use one of VGAM’s supported GP families instead:
