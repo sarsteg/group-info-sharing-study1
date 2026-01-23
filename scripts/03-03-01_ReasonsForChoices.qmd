@@ -321,7 +321,7 @@ REASONS_category <- REASONS_category %>%
 
 ```{r}
 REASONS_category <- REASONS_category %>% 
-  select("REASONS_1", "REASONS_2", "REASONS_3", REASONS_coOp, "REASONS_4", "REASONS_5", "REASONS_6", "REASONS_7", "REASONS_8", REASONS_coMp)
+  select("REASONS_1", "REASONS_2", "REASONS_3", REASONS_coOp, "REASONS_4", "REASONS_5", "REASONS_6", "REASONS_7", "REASONS_8", REASONS_coMp, structure, motivation)
 ```
 
 ```{r}
@@ -345,6 +345,57 @@ endorse_freq <- REASONS_category %>%
   ungroup()
 
 endorse_freq
+```
+
+```{r}
+endorse_freq <- REASONS_category %>%
+  select(structure, motivation, REASONS_coOp, REASONS_coMp) %>%
+  pivot_longer(
+    cols      = c(REASONS_coOp, REASONS_coMp),
+    names_to  = "Item",
+    values_to = "Endorsed"
+  ) %>%
+  group_by(structure, motivation, Item) %>%   # keep Item in the group
+  summarise(
+    n_endorsed    = sum(Endorsed == 1, na.rm = TRUE),
+    prop_endorsed = mean(Endorsed == 1, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+endorse_freq
+```
+
+```{r}
+var_order <- c("REASONS_coOp", "REASONS_coMp")
+
+cond_order <- c(
+  "individual–prosocial",
+  "individual–proself",
+  "group–prosocial",
+  "group–proself"
+)
+
+apa_tbl <- endorse_freq %>%
+  mutate(
+    # combine structure and motivation into one condition label
+    condition = paste(structure, motivation, sep = "–"),
+    condition = factor(condition, levels = cond_order),
+
+    # use Item as the row variable
+    variable  = factor(Item, levels = var_order),
+
+    # percentage from prop_endorsed, no decimals
+    cell      = sprintf("%.0f%%", prop_endorsed * 100)
+  ) %>%
+  dplyr::select(variable, condition, cell) %>%
+  tidyr::pivot_wider(
+    names_from  = condition,
+    values_from = cell
+  ) %>%
+  arrange(variable) %>%
+  dplyr::select(variable, any_of(cond_order))
+
+apa_tbl
 ```
 
 #### count
