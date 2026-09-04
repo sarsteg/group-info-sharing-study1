@@ -8,6 +8,12 @@ editor:
 
 ------------------------------------------------------------------------
 
+## 00 Support Files
+
+[Common-Functions](_common.R)
+
+------------------------------------------------------------------------
+
 ## 01 Setup
 
 [Data-Cleaning](scripts/01-01_DataCleaning.qmd)
@@ -40,6 +46,8 @@ editor:
 
 [Information-Sharing-COM-Poisson](scripts/03_01_05_InfoSharingCOM.qmd)
 
+[Information-Sharing-Binominal](scripts/03-01-06_InfoSharingBinominal.qmd)
+
 ### b Cooperation
 
 [Cooperation](scripts/03-02-01_Cooperation.qmd)
@@ -52,6 +60,8 @@ editor:
 
 ------------------------------------------------------------------------
 
-## 04 Support files
+## 05 Analyses
 
-[Common-Functions](_common.R)
+### a Power Analysis
+
+[Power-Analysis](scripts/05_01_01_PowerAnalysis.qmd)
