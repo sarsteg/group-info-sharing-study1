@@ -499,6 +499,33 @@ apa_corr_matrix <- function(
 
 
 
+save_to_workbook <- function(wb, sheet_name, output_name) {
+  
+  # Remove sheet if it already exists
+  if (sheet_name %in% names(wb)) {
+    removeWorksheet(wb, sheet_name)
+  }
+  
+  # Create worksheet
+  addWorksheet(wb, sheet_name)
+  
+  # Convert output to data frame if needed
+  output_name <- as.data.frame(output_name)
+  
+  # Write output to worksheet
+  writeData(
+    wb,
+    sheet_name,
+    output_name,
+    rowNames = TRUE
+  )
+}
+
+
+
+
+
+
 
 
 # END --------------------------------------------------------------------------
