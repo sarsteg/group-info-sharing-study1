@@ -1,0 +1,191 @@
+---
+title: "05_01_01_PowerAnalysis"
+format: html
+---
+
+# Power Analysis
+
+Possible packages:
+
+~~**`powerlmm`**  - longitudinal data, NA~~
+
+`pwr` - basic power analysis, but includes [Wald test](https://cran.r-project.org/web/packages/pwrss/vignettes/examples.html#7_Regression:_Poisson_(Wald%E2%80%99s_Z-Test)), might work if no manipulations
+
+`simr` - mixed-effects general linear models \<----- best option due to complex model
+
+## Study 1
+
+```{r}
+gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
+codebook <- readRDS("../artifacts/codebook.rds")
+library(glmmTMB)
+source("../_common.R")
+```
+
+```{r}
+form <- Count ~ (structure_number01 * motivation_number01 *
+  InfoType * InfoImportance) +
+  Sex + NeedCog_Mean + 
+  (1 | ResponseId)
+```
+
+```{r}
+vars_needed <- c("ResponseId", all.vars(form))
+
+dat_full <- gee_long_shared %>%
+  mutate(across(where(is.character), factor)) %>%
+  dplyr::select(all_of(vars_needed)) %>%
+  filter(complete.cases(.)) %>%
+  droplevels()
+```
+
+### full model
+
+```{r}
+form <- Count ~ (structure_number01 * motivation_number01 *
+  InfoType * InfoImportance) +
+  Sex + NeedCog_Mean + 
+  (1 | ResponseId)
+```
+
+```{r}
+fit <- glmmTMB(form,
+  data = dat_full,
+  family = compois(link = "log")
+)
+```
+
+```{r}
+# summary(fit)
+```
+
+### null model
+
+```{r}
+form_null <- Count ~ Sex + NeedCog_Mean + (1 | ResponseId)
+
+fit_null <- glmmTMB(
+  form_null,
+  data = dat_full,
+  family = compois(link = "log")
+)
+```
+
+### simulate global
+
+```{r}
+one_run_global <- function(fit_full, fit_null) {
+  dat_sim <- model.frame(fit_full)
+
+  # Step 2: simulate a new outcome vector under the full model
+  dat_sim$Count <- as.numeric(simulate(fit_full, nsim = 1)[[1]])
+
+  # Step 3: refit models to the simulated data
+  full_refit <- try(update(fit_full, data = dat_sim), silent = TRUE)
+  if (inherits(full_refit, "try-error")) return(NA)
+
+  null_refit <- try(update(fit_null, data = dat_sim), silent = TRUE)
+  if (inherits(null_refit, "try-error")) return(NA)
+
+  # Global LRT: does full beat null?
+  p <- anova(null_refit, full_refit)$`Pr(>Chisq)`[2]
+  isTRUE(p < 0.05)
+}
+
+set.seed(1)
+one_run_global(fit, fit_null)
+
+```
+
+```{r}
+# set.seed(1)
+# nsim <- 100    # number of simulations to run
+# 
+# res <- sapply(seq_len(nsim), function(i) {
+#   if (i %% 5 == 0) message("Simulation ", i, "/", nsim)
+#   one_run_global(fit, fit_null)
+# })
+# 
+# power_est <- mean(res, na.rm = TRUE)
+# fail_rate <- mean(is.na(res))
+# 
+# power_est
+# fail_rate
+```
+
+### simulate 4 way
+
+```{r}
+one_run_term <- function(fit_full, drop_term) {
+  dat_sim <- model.frame(fit_full)
+  dat_sim$Count <- as.numeric(simulate(fit_full, nsim = 1)[[1]])
+
+  full_refit <- try(update(fit_full, data = dat_sim), silent = TRUE)
+  if (inherits(full_refit, "try-error")) return(NA)
+
+  red_refit <- try(
+    update(full_refit, as.formula(paste(". ~ . -", drop_term))),
+    silent = TRUE
+  )
+  if (inherits(red_refit, "try-error")) return(NA)
+
+  p <- anova(red_refit, full_refit)$`Pr(>Chisq)`[2]
+  isTRUE(p < 0.05)
+}
+```
+
+```{r}
+set.seed(1)
+nsim <- 5
+
+res_4way <- sapply(seq_len(nsim), function(i) {
+  if (i %% 5 == 0) message("Simulation ", i, "/", nsim)
+  one_run_term(
+    fit,
+    "structure_number01:motivation_number01:InfoType:InfoImportance"
+  )
+})
+
+mean(res_4way, na.rm = TRUE)
+mean(is.na(res_4way))
+```
+
+```{r}
+# simulate(fit, nsim = 1)
+```
+
+## Study 2
+
+```{r}
+library(simr)
+library(lme4)
+
+# 1. Create a dummy data frame representing your factorial design
+# Replace 'n_subj' with a starting guess (e.g., 60)
+n_subj <- 240 
+subj_ids <- 1:n_subj
+structure <- c("S1", "S2", "S3")
+motivation <- c("M1", "M2")
+info_type <- c("T1", "T2")
+importance <- c("High", "Low")
+items <- 1:5
+
+df <- expand.grid(ResponseId=subj_ids, structure=structure, motivation=motivation, 
+                  info_type=info_type, importance=importance, item=items)
+
+# 2. Define the Fixed Effects (The Intercept and the 4-way interaction)
+# We set all other effects to 0 for a conservative test of the 4-way term
+fixed <- c(0.18, rep(0, 22), 1.34) # 0.18 is intercept, 1.34 is the last interaction term
+
+# 3. Define Random Effects (Subject variance)
+# Using 0.1 as a conservative estimate since your pilot was nearly 0
+rand <- 0.1 
+
+# 4. Create the model object
+model <- makeGlmer(y ~ structure*motivation*info_type*importance + (1|ResponseId), 
+                   family="poisson", fixef=fixed, VarCorr=rand, data=df)
+
+# 5. Run the power analysis
+power_sim <- powerSim(model, fixed("structure:motivation:info_type:importance", "lr"), nsim=100)
+print(power_sim)
+```
