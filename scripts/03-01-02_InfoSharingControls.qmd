@@ -21,7 +21,13 @@ library(geepack)
 library(glmmTMB)
 ```
 
-## ---- INFORMATION SHARING TASK ----
+## ---- BINOMIAL INFORMATION SHARING TASK ----
+
+This version uses binominal regression. Control variables are the same as the count variable: sex and need for cognition.
+
+Output is created in the infosharingbinominal file.
+
+## ---- COUNT INFORMATION SHARING TASK ----
 
 Note: cases were dropped that were flags in the drop-cases file.
 

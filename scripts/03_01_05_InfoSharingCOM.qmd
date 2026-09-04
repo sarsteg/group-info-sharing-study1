@@ -1,4 +1,5 @@
 ---
+ii---
 title: "03_01_05_InfoSharingCOM"
 format: html
 ---
@@ -12,6 +13,8 @@ source("../_common.R")
 ```{r}
 library(glmmTMB)
 library(DHARMa)
+# library(ggpattern)
+library(papaja)
 ```
 
 ## ---- INFORMATION SHARING TASK ----
@@ -224,6 +227,228 @@ dat_more %>%
   )
 ```
 
+#### figure
+
+```{r}
+library(emmeans)
+
+emm <- emmeans(
+  model_mixedCOM_more,
+  ~ structure_number01 * motivation_number01 * InfoType,
+  type = "response"
+)
+
+plot_data <- as.data.frame(emm)
+```
+
+```{r}
+plot_data <- plot_data %>%
+  mutate(
+    structure_number01 = factor(
+      structure_number01,
+      levels = c(0,1),
+      labels = c("Interindividual", "Intergroup")
+    ),
+    motivation_number01 = factor(
+      motivation_number01,
+      levels = c(0,1),
+      labels = c("Proself", "Prosocial")
+    ),
+      InfoType = factor(
+      InfoType,
+      levels = c("public", "private"),
+      labels = c("Common", "Unique")
+    )
+  )
+```
+
+```{r}
+names(plot_data)
+```
+
+##### fig_info_type_more
+
+```{r}
+library(papaja)
+
+fig_info_type <- ggplot(plot_data,
+       aes(x = motivation_number01,
+           y = response,
+           color = InfoType,
+           group = InfoType)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = .1
+  ) +
+  facet_wrap(~structure_number01) +
+  labs(
+    x = "Motivation",
+    y = "Predicted count",
+    color = "Distribution"
+  ) +
+  theme_apa()+
+  theme(
+    text = element_text(size = 30, family = "serif", color = "black"),
+    axis.title = element_text(size = 30, face = "bold", color = "black"),
+    axis.text = element_text(size = 30, face = "bold", color = "black"),
+    
+    # ✅ These lines control the TICK MARKS
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    
+    # ✅ These restore AXIS LINES that ticks sit on
+    axis.line = element_line(color = "black"),
+    
+    # ✅ Remove background gridlines (APA prefers a clean look)
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+
+fig_info_type
+```
+
+```{r}
+ggsave(
+  "../figures/fig_info_type.png", 
+  plot = fig_info_type, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
+##### fig_info_type_more2
+
+```{r}
+fig_info_type2 <- ggplot(plot_data,
+       aes(x = structure_number01,
+           y = response,
+           color = motivation_number01,
+           group = motivation_number01)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = .1
+  ) +
+  facet_wrap(~InfoType) +
+  labs(
+    x = "Motivation",
+    y = "Predicted count",
+    color = "Distribution"
+  ) +
+  theme_apa()+
+  theme(
+    text = element_text(size = 30, family = "serif", color = "black"),
+    axis.title = element_text(size = 30, face = "bold", color = "black"),
+    axis.text = element_text(size = 30, face = "bold", color = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    
+    # ✅ These lines control the TICK MARKS
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    
+    # ✅ These restore AXIS LINES that ticks sit on
+    axis.line = element_line(color = "black"),
+    
+    # ✅ Remove background gridlines (APA prefers a clean look)
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+
+fig_info_type2
+```
+
+```{r}
+ggsave(
+  "../figures/fig_info_type2.png", 
+  plot = fig_info_type2, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
+##### fig_bar_more
+
+```{r}
+names(plot_data)
+```
+
+```{r}
+fig_bar_more <- ggplot(
+  plot_data,
+  aes(x = motivation_number01, y = response, fill = InfoType)
+) +
+  geom_col(
+    position = position_dodge(width = 0.8),
+    width = 0.7,
+    alpha = 0.5,
+    color = "black", 
+    linewidth = 0.2
+  ) +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    position = position_dodge(width = 0.8),
+    width = 0.25,
+    linewidth = 1.2
+  ) +
+  facet_wrap(~ structure_number01) +
+  scale_y_continuous(breaks = seq(0, 3, 1)) +
+  coord_cartesian(ylim = c(0, 3)) +
+  theme_apa() +
+  theme(
+  text = element_text(size = 30, family = "serif", color = "black"),
+  axis.title = element_text(size = 30, face = "bold", color = "black"),
+  axis.text = element_text(size = 30, face = "bold", color = "black"),
+  
+  # ✅ These lines control the TICK MARKS
+  axis.ticks = element_line(color = "black", size = 0.5),
+  axis.ticks.length = unit(0.10, "cm"),
+  
+  # ✅ These restore AXIS LINES that ticks sit on
+  axis.line = element_line(color = "black"),
+  
+  # ✅ Remove background gridlines (APA prefers a clean look)
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.border = element_blank()
+  ) +
+  labs(
+    x = "Motivation",
+    y = "Clues Shared"
+  ) +
+  scale_fill_manual(
+    name = "Distribution",
+    values = c(
+      "Common" = "#0C7BDC",
+      "Unique" = "#FFC20A"
+    )
+  )
+
+fig_bar_more
+```
+
+```{r}
+ggsave(
+  "../figures/fig_bar_more.png", 
+  plot = fig_bar_more, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
 ### less
 
 #### data
@@ -292,6 +517,159 @@ dat_less %>%
   summarise(
     mean_value = mean(Count, na.rm = TRUE),
     sd_value = sd(Count, na.rm = TRUE)
+  )
+```
+
+#### figure
+
+```{r}
+emm_less <- emmeans(
+  model_mixedCOM_less,
+  ~ structure_number01 * motivation_number01 * InfoType,
+  type = "response"
+)
+
+plot_data_less <- as.data.frame(emm_less)
+```
+
+```{r}
+plot_data_less <- plot_data_less %>%
+  mutate(
+    structure_number01 = factor(
+      structure_number01,
+      levels = c(0,1),
+      labels = c("Interindividual", "Intergroup")
+    ),
+    motivation_number01 = factor(
+      motivation_number01,
+      levels = c(0,1),
+      labels = c("Proself", "Prosocial")
+    ),
+      InfoType = factor(
+      InfoType,
+      levels = c("public", "private"),
+      labels = c("Common", "Unique")
+    )
+  )
+```
+
+```{r}
+fig_info_type_less <- ggplot(plot_data_less,
+       aes(x = motivation_number01,
+           y = response,
+           color = InfoType,
+           group = InfoType)) +
+  geom_point(size = 3) +
+  geom_line() +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    width = .1
+  ) +
+  facet_wrap(~structure_number01) +
+  labs(
+    x = "Motivation",
+    y = "Predicted count",
+    color = "Distribution"
+  ) +
+  theme_apa()+
+  theme(
+    text = element_text(size = 30, family = "serif", color = "black"),
+    axis.title = element_text(size = 30, face = "bold", color = "black"),
+    axis.text = element_text(size = 30, face = "bold", color = "black"),
+    
+    # ✅ These lines control the TICK MARKS
+    axis.ticks = element_line(color = "black", size = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    
+    # ✅ These restore AXIS LINES that ticks sit on
+    axis.line = element_line(color = "black"),
+    
+    # ✅ Remove background gridlines (APA prefers a clean look)
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+
+fig_info_type_less
+```
+
+```{r}
+ggsave(
+  "../figures/fig_info_type_less.png", 
+  plot = fig_info_type_less, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
+##### fig_bar_less
+
+```{r}
+fig_bar_less <- ggplot(
+  plot_data_less,
+  aes(x = motivation_number01, y = response, fill = InfoType)
+) +
+  geom_col(
+    position = position_dodge(width = 0.8),
+    width = 0.7,
+    alpha = 0.5,
+    color = "black",   
+    linewidth = 0.2
+  ) +
+  geom_errorbar(
+    aes(ymin = asymp.LCL, ymax = asymp.UCL),
+    position = position_dodge(width = 0.8),
+    width = 0.25,
+    linewidth = 1.2
+  ) +
+  facet_wrap(~ structure_number01) +
+  scale_y_continuous(breaks = seq(0, 3, 1)) +
+  coord_cartesian(ylim = c(0, 3)) +
+  theme_apa() +
+  theme(
+  text = element_text(size = 30, family = "serif", color = "black"),
+  axis.title = element_text(size = 30, face = "bold", color = "black"),
+  axis.text = element_text(size = 30, face = "bold", color = "black"),
+  
+  # ✅ These lines control the TICK MARKS
+  axis.ticks = element_line(color = "black", size = 0.5),
+  axis.ticks.length = unit(0.10, "cm"),
+  
+  # ✅ These restore AXIS LINES that ticks sit on
+  axis.line = element_line(color = "black"),
+  
+  # ✅ Remove background gridlines (APA prefers a clean look)
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  panel.border = element_blank()
+  ) +
+  labs(
+    x = "Motivation",
+    y = "Clues Shared"
+  ) +
+  scale_fill_manual(
+    name = "Distribution",
+    values = c(
+      "Common" = "#0C7BDC",
+      "Unique" = "#FFC20A"
+    )
+  )
+
+fig_bar_less
+```
+
+```{r}
+ggsave(
+  "../figures/fig_bar_less.png", 
+  plot = fig_bar_less, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
   )
 ```
 
@@ -458,6 +836,213 @@ dat_more_private %>%
 desc_by_cell_input(dat_more_private, group_vars = c("structure_number01", "motivation_number01"), var = "Count")
 ```
 
+#### figure
+
+```{r}
+interaction_data_more_private <- dat_more_private %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE),
+    n = n(),
+    se = sd_value / sqrt(n),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# interaction_data <- interaction_data %>%
+#   mutate(
+#     structure_number01 = factor(
+#       structure_number01,
+#       levels = c(0,1),
+#       labels = c("Interindividual", "Intergroup")
+#     ),
+#     motivation_number01 = factor(
+#       motivation_number01,
+#       levels = c(0,1),
+#       labels = c("Proself", "Prosocial")
+#     )
+#   )
+
+interaction_data_more_private <- interaction_data_more_private %>%
+  mutate(
+    structure_number01 = factor(
+      as.numeric(unclass(structure_number01)),
+      levels = c(0, 1),
+      labels = c("Interindividual", "Intergroup")
+    ),
+    motivation_number01 = factor(
+      as.numeric(unclass(motivation_number01)),
+      levels = c(0, 1),
+      labels = c("Proself", "Prosocial")
+    )
+  )
+```
+
+```{r}
+# fig_more_private <- ggplot(interaction_data_more_private,
+#        aes(x = structure_number01,
+#            y = mean_value,
+#            color = motivation_number01,
+#            group = motivation_number01)) +
+#   geom_point(size = 3) +
+#   geom_line() +
+#   geom_errorbar(
+#     aes(ymin = mean_value - se, ymax = mean_value + se),
+#     width = .1
+#   ) +
+#   labs(
+#     x = "Structure",
+#     y = "Mean number of clues shared",
+#     color = "Motivation"
+#   ) +
+#   theme_apa()+
+#   theme(
+#     text = element_text(size = 30, family = "serif", color = "black"),
+#     axis.title = element_text(size = 30, face = "bold", color = "black"),
+#     axis.text = element_text(size = 30, face = "bold", color = "black"),
+#     
+#     # ✅ These lines control the TICK MARKS
+#     axis.ticks = element_line(color = "black", size = 0.5),
+#     axis.ticks.length = unit(0.10, "cm"),
+#     
+#     # ✅ These restore AXIS LINES that ticks sit on
+#     axis.line = element_line(color = "black"),
+#     
+#     # ✅ Remove background gridlines (APA prefers a clean look)
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     panel.border = element_blank()
+#   )
+# 
+# fig_more_private
+```
+
+```{r}
+# ggsave(
+#   "../figures/fig_more_private.png", 
+#   plot = fig_more_private, 
+#   width = 6.5,   height = 4.5, 
+#   units = "in",
+#   scale = 2, 
+#   dpi = 72
+#   # device = Cairo::CairoPNG
+#   )
+```
+
+##### fig_bar_more_private2
+
+```{r}
+# pd <- position_dodge(width = 0.8)
+# 
+# fig_bar_more_private <- ggplot(
+#   interaction_data_more_private,
+#   aes(
+#     x = structure_number01,
+#     y = mean_value,
+#     fill = motivation_number01
+#   )
+# ) +
+#   geom_col(
+#     position = pd,
+#     width = 0.7,
+#     alpha = 0.5
+#   ) +
+#   geom_errorbar(
+#     aes(ymin = mean_value - se, ymax = mean_value + se),
+#     position = pd,
+#     width = 0.25,
+#     linewidth = 1.2
+#   ) +
+#   labs(
+#     x = "Structure",
+#     y = "Mean number of clues shared",
+#     fill = "Motivation"
+#   ) +
+#   scale_y_continuous(breaks = seq(0, 3, 1)) +
+#   coord_cartesian(ylim = c(0, 3)) +
+#   theme_apa() +
+#   theme(
+#     text = element_text(size = 30, family = "serif", color = "black"),
+#     axis.title = element_text(size = 30, face = "bold", color = "black"),
+#     axis.text = element_text(size = 30, face = "bold", color = "black"),
+#     axis.ticks = element_line(color = "black", linewidth = 0.5),
+#     axis.ticks.length = unit(0.10, "cm"),
+#     axis.line = element_line(color = "black"),
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     panel.border = element_blank()
+#   )
+# 
+# fig_bar_more_private
+```
+
+```{r}
+# ggsave(
+#   "../figures/fig_bar_more_private.png", 
+#   plot = fig_bar_more_private, 
+#   width = 6.5,   height = 4.5, 
+#   units = "in",
+#   scale = 2, 
+#   dpi = 72
+#   # device = Cairo::CairoPNG
+#   )
+```
+
+```{r}
+fig_bar_more_private2 <- ggplot(
+  interaction_data_more_private,
+  aes(x = motivation_number01, y = mean_value)
+) +
+  geom_col(
+    fill = "#FFC20A",
+    width = 0.7,
+    alpha = 0.5,
+    color = "black",   
+    linewidth = 0.2
+  ) +
+  geom_errorbar(
+    aes(ymin = mean_value - se, ymax = mean_value + se),
+    width = 0.25,
+    linewidth = 1.2
+  ) +
+  facet_wrap(~ structure_number01) +
+  scale_y_continuous(breaks = seq(0, 3, 1)) +
+  coord_cartesian(ylim = c(0, 3)) +
+  labs(
+    x = "Motivation",
+    y = "Clues Shared"
+  ) +
+  theme_apa() +
+  theme(
+    text = element_text(size = 30, family = "serif", color = "black"),
+    axis.title = element_text(size = 30, face = "bold", color = "black"),
+    axis.text = element_text(size = 30, face = "bold", color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    legend.position = "none"
+  )
+
+fig_bar_more_private2
+```
+
+```{r}
+ggsave(
+  "../figures/fig_bar_more_private2.png", 
+  plot = fig_bar_more_private2, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
+```
+
 ### High/More & Common/Public
 
 #### data
@@ -529,6 +1114,144 @@ dat_more_public %>%
 
 ```{r}
 desc_by_cell_input(dat_more_public, group_vars = c("structure_number01", "motivation_number01"), var = "Count")
+```
+
+#### figure
+
+```{r}
+interaction_data_more_public <- dat_more_public %>%
+  group_by(structure_number01, motivation_number01) %>%
+  summarise(
+    mean_value = mean(Count, na.rm = TRUE),
+    sd_value = sd(Count, na.rm = TRUE),
+    n = n(),
+    se = sd_value / sqrt(n),
+    .groups = "drop"
+  )
+```
+
+```{r}
+interaction_data_more_public <- interaction_data_more_public %>%
+  mutate(
+    structure_number01 = factor(
+      as.numeric(unclass(structure_number01)),
+      levels = c(0, 1),
+      labels = c("Interindividual", "Intergroup")
+    ),
+    motivation_number01 = factor(
+      as.numeric(unclass(motivation_number01)),
+      levels = c(0, 1),
+      labels = c("Proself", "Prosocial")
+    )
+  )
+```
+
+##### fit_more_public
+
+```{r}
+# fit_more_public <- ggplot(interaction_data_more_public,
+#        aes(x = structure_number01,
+#            y = mean_value,
+#            color = motivation_number01,
+#            group = motivation_number01)) +
+#   geom_point(size = 3) +
+#   geom_line() +
+#   geom_errorbar(
+#     aes(ymin = mean_value - se, ymax = mean_value + se),
+#     width = .1
+#   ) +
+#   labs(
+#     x = "Structure",
+#     y = "Mean number of clues shared",
+#     color = "Motivation"
+#   ) +
+#   theme_apa()+
+#   theme(
+#     text = element_text(size = 30, family = "serif", color = "black"),
+#     axis.title = element_text(size = 30, face = "bold", color = "black"),
+#     axis.text = element_text(size = 30, face = "bold", color = "black"),
+#     
+#     # ✅ These lines control the TICK MARKS
+#     axis.ticks = element_line(color = "black", size = 0.5),
+#     axis.ticks.length = unit(0.10, "cm"),
+#     
+#     # ✅ These restore AXIS LINES that ticks sit on
+#     axis.line = element_line(color = "black"),
+#     
+#     # ✅ Remove background gridlines (APA prefers a clean look)
+#     panel.grid.major = element_blank(),
+#     panel.grid.minor = element_blank(),
+#     panel.border = element_blank()
+#   )
+# 
+# fit_more_public
+```
+
+```{r}
+# ggsave(
+#   "../figures/fit_more_public.png", 
+#   plot = fit_more_public, 
+#   width = 6.5,   height = 4.5, 
+#   units = "in",
+#   scale = 2, 
+#   dpi = 72
+#   # device = Cairo::CairoPNG
+#   )
+```
+
+##### fig_bar_more_public
+
+```{r}
+fig_bar_more_public <- ggplot(
+  interaction_data_more_public,
+  aes(x = motivation_number01, y = mean_value)
+) +
+  geom_col(
+    fill = "#0C7BDC",
+    width = 0.7,
+    alpha = 0.5,
+    color = "black",   
+    linewidth = 0.2
+  ) +
+  geom_errorbar(
+    aes(ymin = mean_value - se, ymax = mean_value + se),
+    width = 0.25,
+    linewidth = 1.2
+  ) +
+  facet_wrap(~ structure_number01) +
+  scale_y_continuous(breaks = seq(0, 3, 1)) +
+  coord_cartesian(ylim = c(0, 3)) +
+  labs(
+    x = "Motivation",
+    y = "Clues Shared"
+  ) +
+  theme_apa() +
+  theme(
+    text = element_text(size = 30, family = "serif", color = "black"),
+    axis.title = element_text(size = 30, face = "bold", color = "black"),
+    axis.text = element_text(size = 30, face = "bold", color = "black"),
+    axis.ticks = element_line(color = "black", linewidth = 0.5),
+    axis.ticks.length = unit(0.10, "cm"),
+    axis.line = element_line(color = "black"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+    legend.position = "none"
+  )
+
+fig_bar_more_public
+```
+
+```{r}
+ggsave(
+  "../figures/fig_bar_more_public.png", 
+  plot = fig_bar_more_public, 
+  width = 6.5,   height = 4.5, 
+  units = "in",
+  scale = 2, 
+  dpi = 72
+  # device = Cairo::CairoPNG
+  )
 ```
 
 ### Low/Less & Private/Unique

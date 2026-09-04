@@ -12,6 +12,10 @@ gee_long_shared <- readRDS("../artifacts/gee_long_shared.rds")
 source("../_common.R")
 ```
 
+```{r}
+library(janitor)
+```
+
 ## 3. INFORMATION SHARING TASK
 
 #### behavior summary, descriptives
@@ -29,6 +33,17 @@ behavior_summary <- gee_long_all_bx %>%
   )
 
 # View(behavior_summary)
+```
+
+```{r}
+behavior_summary_info <- gee_long_all_bx %>%
+  group_by(ResponseId, InfoType, InfoImportance, Behavior) %>%
+  summarise(total = sum(Count), .groups = "drop") %>%
+  tidyr::pivot_wider(
+    names_from = Behavior,
+    values_from = total,
+    values_fill = 0
+  )
 ```
 
 ```{r}
@@ -56,6 +71,18 @@ behavior_long <- behavior_summary %>%
   mutate(Prop = Count / sum(Count)) %>%    # calculate proportion of responses per person
   ungroup()
 
+```
+
+```{r}
+behavior_long_info <- behavior_summary_info %>%
+  pivot_longer(
+    cols = c(shared, withheld, distort),
+    names_to = "Behavior",
+    values_to = "Count"
+  ) %>%
+  group_by(ResponseId, InfoType, InfoImportance) %>%
+  mutate(Prop = Count / sum(Count)) %>%
+  ungroup()
 ```
 
 ```{r}
@@ -117,6 +144,78 @@ distortion_freq
 
 ```
 
+### Zeros in cells, visualization of bx summary
+
+```{r}
+names(behavior_long)
+```
+
+```{r}
+ggplot(behavior_long, aes(x = Count, fill = Behavior)) +
+  geom_density(alpha = 0.4) +
+  labs(
+    x = "Number of instances",
+    y = "Density",
+    fill = "Response type"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+# behavior_long %>% 
+#   count(Behavior, Count)
+
+behavior_long %>% 
+  tabyl(Behavior, Count)
+```
+
+```{r}
+names(behavior_long_info)
+```
+
+```{r}
+behavior_long_info %>%
+  group_by(InfoType, InfoImportance, Behavior) %>%
+  summarise(Total = sum(Count), .groups = "drop")
+```
+
+### zero across conditions, visualization
+
+```{r}
+# names(filtered_data)
+```
+
+```{r}
+# Create data that has the UserID and the condition that they were in ONLY
+condition_by_responseid <- filtered_data %>% 
+  select(
+    ResponseId,
+    condition
+  )
+
+# Join the data together
+behavior_long_condition <- behavior_long %>% 
+  left_join(condition_by_responseid, by = "ResponseId")
+
+behavior_long_condition %>% 
+  tabyl(Behavior, Count, condition)
+```
+
+```{r}
+behavior_long_info %>%
+  mutate(info_condition = paste(InfoType, InfoImportance, sep = "_")) %>%
+  tabyl(Behavior, Count, info_condition) %>%
+  adorn_percentages("col")
+```
+
+```{r}
+behavior_long_info %>%
+  filter(Behavior == "distort") %>%
+  group_by(ResponseId) %>%
+  summarise(total_distort = sum(Count, na.rm = TRUE)) %>%
+  count(total_distort)
+```
+
 ### Checking cases with high distortion
 
 4 cases chose to distort more than 5 items (2 cases at 6, 2 cases at 7)
@@ -143,7 +242,7 @@ filtered_distort <- filtered_data %>%
 ```
 
 ```{r}
-View(filtered_distort)
+# View(filtered_distort)
 ```
 
 ```{r}
