@@ -19,11 +19,20 @@ codebook <- readRDS("../artifacts/codebook.rds")
 library(glmmTMB)
 library(emmeans)
 library(openxlsx)
+library(modelsummary)
+library(gtsummary)
+library(broom)
 ```
 
 ```{r}
 # Create workbook to save the analyses
 wb <- createWorkbook()
+excel_export_file_location <- "../artifacts/binomial_output.xlsx"
+
+# Start fresh each time
+if (file.exists(excel_export_file_location)) {
+  file.remove(excel_export_file_location)
+}
 ```
 
 ### items key
@@ -268,25 +277,65 @@ saveRDS(model_binom,
         )
 ```
 
-#### summary(model_binom)
+#### model_logit_table
 
 ```{r}
-summary(model_binom)
-```
-
-###### 💾 model summary & cofficients
-
-```{r}
-save_output_to_workbook(
-  wb, 
-  sheet_name = "Model Summary",
-  output = summary(model_binom)
+model_logit_table <- modelsummary(
+  model_binom,
+  output = "data.frame",
+  estimate = "estimate",
+  statistic = c(
+    "SE" = "std.error",
+    "z" = "statistic",
+    "p" = "p.value",
+    "95% CI" = "conf.int"
+  ),
+  conf_level = 0.95,
+  exponentiate = FALSE,
+  stars = TRUE,
+  fmt = 3
 )
 
+model_logit_table
+```
+
+###### 💾model logit
+
+```{r}
 save_output_to_workbook(
-  wb, 
-  sheet_name = "Model Coefficients",
-  output = summary(model_binom)$coefficients$cond
+  wb,
+  "Model Logit",
+  model_logit_table
+)
+```
+
+#### model_or_table
+
+```{r}
+model_or_table <- modelsummary(
+  model_binom,
+  output = "data.frame",
+  estimate = "estimate",
+  statistic = c(
+    "95% CI" = "conf.int",
+    "p" = "p.value"
+  ),
+  conf_level = 0.95,
+  exponentiate = TRUE,
+  stars = TRUE,
+  fmt = 3
+)
+
+model_or_table
+```
+
+###### 💾modle or
+
+```{r}
+save_output_to_workbook(
+  wb,
+  "Model Odds Ratios",
+  model_or_table
 )
 ```
 
@@ -386,7 +435,7 @@ emm_sm <- emmeans(
 ###### 💾SM emmean
 
 ```{r}
-save_output_to_workbook(w, "SM emmean, emm_sm")
+save_output_to_workbook(wb, "SM emmean", emm_sm)
 ```
 
 ##### contrasts
@@ -526,65 +575,27 @@ pairs(
 )
 ```
 
-###### HU Prosocial emmean
+###### 💾HU Prosocial emmean
 
 ```{r}
-# Save the summary to the excel file
-sheet_name  <- "HU Prosocial emmean"
-
-# Save summary as data frame
-output_name <- as.data.frame(emm_high_unique_structure)
-
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
+save_output_to_workbook(
+  wb, 
+  "HU Prosocial emmean", 
+  emm_high_unique_structure
 )
 ```
 
-###### HU Prosocial Contrast
+###### 💾HU Prosocial Contrast
 
 ```{r}
-sheet_name  <- "HU Prosocial Contrast"
-
-# Save to excel
-output_name <- as.data.frame(
-  contrast(
-    emm_high_unique_structure,
-    interaction = "pairwise",
-    adjust = "holm"
-  )
-)
-
-
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
+save_output_to_workbook(
+  wb, 
+  sheet_name = "HU Prosocial Contrast", 
+  output =  contrast(
+              emm_high_unique_structure,
+              interaction = "pairwise",
+              adjust = "holm"
+            )
 )
 ```
 
@@ -602,36 +613,17 @@ joint_panels
 ```
 
 | Information condition | Structure | Motivation | Structure × Motivation | What it means |
-|---------------|---------------|---------------|---------------|---------------|
+|----|----|----|----|----|
 | **High, Common** | .869 | **\< .001** | **\< .001** | The effect of structure depends on motivation. Unpack with simple interactions. |
 | **High, Unique** | **.004** | **\< .001** | .246 | Structure and motivation both have significant effects, with [no]{.underline} evidence that their effects depend on one another. |
 | **Low, Common** | .273 | .185 | .110 | [No]{.underline} significant effects of structure, motivation, or their interaction. |
 | **Low, Unique** | .618 | .051 | .210 | [No]{.underline} significant effects at the conventional .05 level. Motivation is close, but does not reach significance. |
 
 ```{r}
-{r}
-# Save the summary to the excel file
-sheet_name  <- "Joint_Panels"
-
-# Save summary as data frame
-output_name <- as.data.frame(joint_panels)
-
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
+save_output_to_workbook(
+  wb, 
+  sheet_name = "Joint Panels", 
+  output = joint_panels
 )
 ```
 
@@ -728,7 +720,7 @@ emmeans(
 ```{r}
 saveWorkbook(
   wb,
-  "../artifacts/Binomial.xlsx",
+  excel_export_file_location,
   overwrite = TRUE
 )
 ```
