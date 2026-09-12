@@ -498,8 +498,9 @@ apa_corr_matrix <- function(
 
 
 
+#..............................................................................
 
-save_to_workbook <- function(wb, sheet_name, output_name) {
+save_output_to_workbook <- function(wb, sheet_name, output) {
   
   # Remove sheet if it already exists
   if (sheet_name %in% names(wb)) {
@@ -510,17 +511,65 @@ save_to_workbook <- function(wb, sheet_name, output_name) {
   addWorksheet(wb, sheet_name)
   
   # Convert output to data frame if needed
-  output_name <- as.data.frame(output_name)
+  output <- as.data.frame(output)
   
   # Write output to worksheet
   writeData(
     wb,
     sheet_name,
-    output_name,
+    output,
     rowNames = TRUE
   )
 }
 
+
+
+
+
+
+
+
+#..............................................................................
+
+save_figure_to_workbook <- function(
+    wb,
+    sheet_name,
+    figure_name,
+    figure_file,
+    width = 8,
+    height = 6,
+    dpi = 300
+) {
+  
+  # Remove sheet if it already exists
+  if (sheet_name %in% names(wb)) {
+    removeWorksheet(wb, sheet_name)
+  }
+  
+  # Create worksheet
+  addWorksheet(wb, sheet_name)
+  
+  # Save figure to file
+  ggsave(
+    filename = figure_file,
+    plot = figure_name,
+    width = width,
+    height = height,
+    dpi = dpi
+  )
+  
+  # Insert figure into workbook
+  insertImage(
+    wb,
+    sheet = sheet_name,
+    file = figure_file,
+    startRow = 1,
+    startCol = 1,
+    width = width,
+    height = height,
+    units = "in"
+  )
+}
 
 
 

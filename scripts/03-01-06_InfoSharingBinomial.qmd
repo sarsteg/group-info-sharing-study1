@@ -268,39 +268,29 @@ saveRDS(model_binom,
         )
 ```
 
+#### summary(model_binom)
+
 ```{r}
 summary(model_binom)
 ```
 
-```{r}
-# Save the summary to the excel file
-sheet_name  <- "Model Summary"
+###### 💾 model summary & cofficients
 
-# Save summary as data frame
-output_name <- as.data.frame(
-  summary(model_binom)$coefficients$cond
+```{r}
+save_output_to_workbook(
+  wb, 
+  sheet_name = "Model Summary",
+  output = summary(model_binom)
 )
 
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
+save_output_to_workbook(
+  wb, 
+  sheet_name = "Model Coefficients",
+  output = summary(model_binom)$coefficients$cond
 )
 ```
 
-### emmeans
+### emmeans()
 
 <https://rvlenth.github.io/emmeans/>
 
@@ -342,35 +332,15 @@ coef is a generic function which extracts model coefficients from objects return
 coef(emm_table_contrast)
 ```
 
+###### 💾All emmeans
+
 ```{r}
-# Save the summary to the excel file
-sheet_name  <- "All emmean"
-
-# Save summary as data frame
-output_name <- as.data.frame(emm_table)
-
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
-)
+save_output_to_workbook(wb, "All emmean", emm_table)
 ```
 
-#### motivation
+#### m
 
-Within a specific combinatino of structure, distribution, and importance, does Proself differ from Prosocial?
+Within a specific combination of structure, distribution, and importance, does Proself differ from Prosocial?
 
 ```{r}
 emm_mot <- emmeans(
@@ -385,7 +355,7 @@ emm_mot <- emmeans(
 pairs(emm_mot)
 ```
 
-#### structure
+#### s
 
 Within a specific motivation, distribution, and importance condition, does Interindividual differ from Intergroup?
 
@@ -402,7 +372,7 @@ emm_struct <- emmeans(
 pairs(emm_struct)
 ```
 
-#### structure \* motivation
+#### s \* m
 
 ```{r}
 emm_sm <- emmeans(
@@ -413,30 +383,10 @@ emm_sm <- emmeans(
 )
 ```
 
+###### 💾SM emmean
+
 ```{r}
-# Save the summary to the excel file
-sheet_name  <- "SM emmean"
-
-# Save summary as data frame
-output_name <- as.data.frame(emm_sm)
-
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
-)
+save_output_to_workbook(w, "SM emmean, emm_sm")
 ```
 
 ##### contrasts
@@ -449,38 +399,20 @@ contrast(
 )
 ```
 
-###### SM Contrasts
+###### 💾 SM Contrasts
 
 ```{r}
-sheet_name <- "SM Contrasts"
+save_output_to_workbook(
+  wb, 
+  sheet_name = "SM Contrasts", 
+  output = 
+      contrast(
+        emm_sm,
+        interaction = "pairwise",
+        adjust = "holm"
+      )
+    )
 
-# Save to excel
-output_name <- as.data.frame(
-  contrast(
-    emm_sm,
-    interaction = "pairwise",
-    adjust = "holm"
-  )
-)
-
-
-# -------------
-
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-# Create the worksheet
-addWorksheet(wb, sheet_name)
-
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
-)
 ```
 
 ##### visualize, fig_emm_sm
@@ -521,7 +453,7 @@ fig_emm_sm <- ggplot(
 fig_emm_sm
 ```
 
-###### save
+###### 💾 fig_emm_sm
 
 ```{r}
 # Where to save and worksheet name
@@ -531,35 +463,14 @@ figure_name <- fig_emm_sm
 ```
 
 ```{r}
-# Save figure in folder
-# Add image to excel file
-
-# Create worksheet (delete old one if present)
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
-
-addWorksheet(wb, sheet_name)
-
-# Save picture to folder
-ggsave(
-  figure_file,
-  plot = figure_name,
-  width = 8,
-  height = 6,
-  dpi = 300
-)
-
-# Add picture to excel file
-insertImage(
-  wb,
-  sheet = sheet_name,
-  file = figure_file,
-  startRow = 1,
-  startCol = 1,
-  width = 8,
-  height = 6,
-  units = "in"
+save_figure_to_workbook(
+    wb,
+    sheet_name ,
+    figure_name,
+    figure_file,
+    width = 8,
+    height = 6,
+    dpi = 300
 )
 ```
 
@@ -646,7 +557,7 @@ writeData(
 ###### HU Prosocial Contrast
 
 ```{r}
-sheet_name <- "HU Prosocial Contrast"
+sheet_name  <- "HU Prosocial Contrast"
 
 # Save to excel
 output_name <- as.data.frame(
@@ -677,25 +588,33 @@ writeData(
 )
 ```
 
-### decompose
+### joint_tests()
 
-#### info importance
+#### info importance & info distribution
 
 ```{r}
-joint_infoimportance <- joint_tests(
-                          model_binom,
-                          by = "InfoImportance"
-                        )
+joint_panels <- joint_tests(
+  model_binom,
+  by = c("InfoImportance", "InfoDistribution")
+)
 
-joint_infoimportance
+joint_panels
 ```
 
+| Information condition | Structure | Motivation | Structure × Motivation | What it means |
+|---------------|---------------|---------------|---------------|---------------|
+| **High, Common** | .869 | **\< .001** | **\< .001** | The effect of structure depends on motivation. Unpack with simple interactions. |
+| **High, Unique** | **.004** | **\< .001** | .246 | Structure and motivation both have significant effects, with [no]{.underline} evidence that their effects depend on one another. |
+| **Low, Common** | .273 | .185 | .110 | [No]{.underline} significant effects of structure, motivation, or their interaction. |
+| **Low, Unique** | .618 | .051 | .210 | [No]{.underline} significant effects at the conventional .05 level. Motivation is close, but does not reach significance. |
+
 ```{r}
+{r}
 # Save the summary to the excel file
-sheet_name  <- "Joint_InfoImportance"
+sheet_name  <- "Joint_Panels"
 
 # Save summary as data frame
-output_name <- as.data.frame(joint_infoimportance)
+output_name <- as.data.frame(joint_panels)
 
 # -------------
 
@@ -716,40 +635,91 @@ writeData(
 )
 ```
 
-#### info distribution
+##### emmeans()
+
+Explore the significant panels
+
+-   High/Common
+
+-   High/Unique
+
+###### High/Common
 
 ```{r}
-joint_infodistribution <- joint_tests(
-                            model_binom,
-                            by = "InfoDistribution"
-                          )
-
-joint_infodistribution
+emm_high_common <- emmeans(
+  model_binom,
+  ~ structure_number01 * motivation_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Common"
+  ),
+  type = "response"
+)
 ```
 
+compare Structure within each Motivation
+
 ```{r}
-# Save the summary to the excel file
-sheet_name  <- "Joint_InfoDistribution"
+pairs(
+  emmeans(
+    model_binom,
+    ~ structure_number01 | motivation_number01,
+    at = list(
+      InfoImportance = "High Importance",
+      InfoDistribution = "Common"
+    ),
+    type = "response"
+  ),
+  adjust = "holm"
+)
+```
 
-# Save summary as data frame
-output_name <- as.data.frame(joint_infodistribution)
+compare Motivation within each Structure
 
-# -------------
+```{r}
+pairs(
+  emmeans(
+    model_binom,
+    ~ motivation_number01 | structure_number01,
+    at = list(
+      InfoImportance = "High Importance",
+      InfoDistribution = "Common"
+    ),
+    type = "response"
+  ),
+  adjust = "holm"
+)
+```
 
-# Remove sheet if already present
-if (sheet_name %in% names(wb)) {
-  removeWorksheet(wb, sheet_name)
-}
+###### High/Unique
 
-# Create the worksheet
-addWorksheet(wb, sheet_name)
+overall difference between Interindividual and Intergroup
 
-# Save to worksheet
-writeData(
-  wb,
-  sheet_name,
-  output_name,
-  rowNames = TRUE
+```{r}
+emmeans(
+  model_binom,
+  pairwise ~ structure_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Unique"
+  ),
+  type = "response",
+  adjust = "holm"
+)
+```
+
+overall difference between Proself and Prosocial
+
+```{r}
+emmeans(
+  model_binom,
+  pairwise ~ motivation_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Unique"
+  ),
+  type = "response",
+  adjust = "holm"
 )
 ```
 
