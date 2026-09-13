@@ -367,7 +367,7 @@ controls_binomial
 ###### 💾controls_binomial_table
 
 ```{r}
-save_output_to_workbook(wb, "Control Variables", controls_binomial_table)
+save_output_to_workbook(wb, "Control Variables", controls_binomial)
 ```
 
 ## full model
@@ -594,7 +594,9 @@ Also, random note about the package: the model was built with glmmTMB, so emmean
 
 <https://rdrr.io/r/stats/coef.html>
 
-coef is a generic function which extracts model coefficients from objects returned by modeling functions. coefficients is an alias for it.
+`coef()` is a generic function which extracts model coefficients from objects returned by modeling functions. coefficients is an alias for it.
+
+`pairs()` is used on emmeans objects to probe significant effects or interactions
 
 #### s \* m
 
@@ -613,14 +615,13 @@ emm_sm <- emmeans(
 save_output_to_workbook(wb, "SM emmean", emm_sm)
 ```
 
-##### contrasts
+##### pairs()
 
 ```{r}
-contrast(
-  emm_sm,
-  interaction = "pairwise",
+pairs(
+  emm_sm, 
   adjust = "holm"
-)
+  )
 ```
 
 ###### 💾 contrasts_emm_sm
@@ -628,18 +629,17 @@ contrast(
 ```{r}
 save_output_to_workbook(
   wb, 
-  sheet_name = "SM Contrasts", 
+  sheet_name = "SM Pairs", 
   output = 
-      contrast(
-        emm_sm,
-        interaction = "pairwise",
-        adjust = "holm"
+    pairs(
+      emm_sm, 
+      adjust = "holm"
       )
     )
 
 ```
 
-##### fig_emm_sm
+##### 📊fig_emm_sm
 
 ```{r}
 emm_sm_df <- as.data.frame(emm_sm)
@@ -712,7 +712,9 @@ emm_mot <- emmeans(
   type = "response"
 )
 
-pairs(emm_mot)
+pairs(
+  emm_mot, 
+  adjust = "holm")
 ```
 
 #### s
@@ -729,7 +731,10 @@ emm_struct <- emmeans(
   type = "response"
 )
 
-pairs(emm_struct)
+pairs(
+  emm_struct,
+  adjust = "holm"
+  )
 ```
 
 #### high imp & unique
@@ -751,9 +756,8 @@ emm_high_unique
 Are those two structure differences themselves significantly different from one another? No, there is insufficient evidence that the structure effect is statistically different between Proself and Prosocial. Shown in the contrast below.
 
 ```{r}
-contrast(
-  emm_high_unique,
-  interaction = "pairwise",
+pairs(
+  emm_high_unique, 
   adjust = "holm"
 )
 ```
@@ -800,9 +804,8 @@ save_output_to_workbook(
 save_output_to_workbook(
   wb, 
   sheet_name = "HU Prosocial Contrast", 
-  output =  contrast(
+  output =  pairs(
               emm_high_unique_structure,
-              interaction = "pairwise",
               adjust = "holm"
             )
 )
