@@ -6,22 +6,25 @@ format:
 ---
 
 ```{r}
+#| warning: false
 source("../_common.R")
 filtered_data <- readRDS("../artifacts/filtered_data.rds")
 codebook <- readRDS("../artifacts/codebook.rds")
 ```
 
-## setup
+## setup —————————————-
 
 ### libraries
 
 ```{r}
+#| warning: false
 library(glmmTMB)
 library(emmeans)
 library(openxlsx)
 library(modelsummary)
 library(gtsummary)
 library(broom)
+library(DHARMa)
 ```
 
 ```{r}
@@ -119,6 +122,8 @@ dat_items <- filtered_data %>%
 
 ### pivot
 
+Data restructuring from wide to long.
+
 ```{r}
 dat_long <- dat_items %>%
   pivot_longer(
@@ -159,15 +164,15 @@ dat_long <- dat_long %>%
     ),
     InfoImportance = factor(
       InfoImportance,
-      levels = c("High", "Low"),
-      labels = c("High Importance", "Low Importance")
+      levels = c("Low", "High"),
+      labels = c("Low Importance", "High Importance")
     )
   )
 ```
 
 ### checks
 
-Are all of the items from the task prepsent?
+Are all of the items from the task present?
 
 ```{r}
 dat_long %>%
@@ -211,7 +216,7 @@ table(dat_long$ItemResponse, useNA = "ifany")
 write.xlsx(dat_long, "../artifacts/binominal_data.xlsx", asTable = TRUE, colWidths = "auto")
 ```
 
-## control model
+## control model —————————————-
 
 ### create form
 
@@ -370,7 +375,7 @@ controls_binomial
 save_output_to_workbook(wb, "Control Variables", controls_binomial)
 ```
 
-## full model
+## full model —————————————-
 
 ### create form
 
@@ -396,6 +401,14 @@ model_binom <- glmmTMB( # The package being used is glmmTMB
   family = binomial(link = "logit"), # Selects binomial distribution using logit link
   data = dat_long
 )
+
+summary(model_binom)
+```
+
+```{r}
+# The model output shows estimates and random effects without an obvious convergence warning
+# TRUE = passes convergence check
+model_binom$sdr$pdHess
 ```
 
 ```{r}
@@ -403,6 +416,55 @@ saveRDS(model_binom,
         file = file.path("../artifacts/model_binom.rds")
         )
 ```
+
+### dispersion
+
+```{r}
+model_binom_sim_res <- simulateResiduals(
+  fittedModel = model_binom
+)
+
+fig_model_binom_sim_res <- plot(model_binom_sim_res)
+
+fig_model_binom_sim_res
+```
+
+```{r}
+# Test dispersion
+model_binom_dispersion <- testDispersion(
+  model_binom_sim_res
+)
+
+model_binom_dispersion
+```
+
+```{r}
+save_figure_to_workbook(
+  wb = wb,
+  sheet_name = "Binomial Res",
+  figure_file = "../artifacts/fig_binomial_sim_res.png",
+  plot_fun = function() plot(model_binom_sim_res),
+  width = 10,
+  height = 6,
+  dpi = 300
+)
+```
+
+Dispersion does not appear to be an issue due to non-significance in the test.
+
+-   **Dispersion test:** dispersion = 1.0081, *p* = .776, so there is no evidence of overdispersion.
+
+<!-- -->
+
+-   **KS test:** *p* = .32279, so the simulated residual distribution does not show a significant departure from what the model expects.
+
+<!-- -->
+
+-   **Outlier test:** *p* = .3351, so there is no evidence of an unusual number of outliers.
+
+<!-- -->
+
+-   The residual-versus-predicted panel explicitly says **“No significant problems detected.”**
 
 ### table
 
@@ -568,7 +630,7 @@ model_binomial_table
 save_output_to_workbook(wb, "Binomial Table", model_binomial_table)
 ```
 
-##### omnibus test
+### omnibus test
 
 overall main effects and interactions
 
@@ -580,7 +642,33 @@ joint_results <- joint_tests(model_binom)
 joint_results
 ```
 
-## emmeans()
+#### decomposition by info I & D
+
+```{r}
+joint_panels <- joint_tests(
+  model_binom,
+  by = c("InfoImportance", "InfoDistribution")
+)
+
+joint_panels
+```
+
+| Information condition | Structure | Motivation | Structure × Motivation | What it means |
+|---------------|---------------|---------------|---------------|---------------|
+| **High, Common** | .869 | **\< .001** | **\< .001** | The effect of structure depends on motivation. Unpack with simple interactions. |
+| **High, Unique** | **.004** | **\< .001** | .246 | Structure and motivation both have significant effects, with [no]{.underline} evidence that their effects depend on one another. |
+| **Low, Common** | .273 | .185 | .110 | [No]{.underline} significant effects of structure, motivation, or their interaction. |
+| **Low, Unique** | .618 | .051 | .210 | [No]{.underline} significant effects at the conventional .05 level. Motivation is close, but does not reach significance. |
+
+```{r}
+save_output_to_workbook(
+  wb, 
+  sheet_name = "Joint Panels", 
+  output = joint_panels
+)
+```
+
+## emmeans() —————————————-
 
 <https://rvlenth.github.io/emmeans/>
 
@@ -598,7 +686,9 @@ Also, random note about the package: the model was built with glmmTMB, so emmean
 
 `pairs()` is used on emmeans objects to probe significant effects or interactions
 
-#### s \* m
+### s \* m
+
+Estimated marginal means for Structure x Motivation across combinations of Distribution x Importance.
 
 ```{r}
 emm_sm <- emmeans(
@@ -609,13 +699,11 @@ emm_sm <- emmeans(
 )
 ```
 
-###### 💾emm_sm
+#### pairs()
 
-```{r}
-save_output_to_workbook(wb, "SM emmean", emm_sm)
-```
+Six pairwise comparisons within each information combination.
 
-##### pairs()
+Limited interpretation
 
 ```{r}
 pairs(
@@ -639,10 +727,14 @@ save_output_to_workbook(
 
 ```
 
-##### 📊fig_emm_sm
+#### 📊fig_emm_sm
 
 ```{r}
 emm_sm_df <- as.data.frame(emm_sm)
+```
+
+```{r}
+save_output_to_workbook(wb, "SM emmean", emm_sm_df)
 ```
 
 ```{r}
@@ -680,69 +772,85 @@ fig_emm_sm
 ###### 💾 fig_emm_sm
 
 ```{r}
-# Where to save and worksheet name
-sheet_name  <- "SM Figure"
-figure_file <- "../artifacts/SM_Interaction.png" 
-figure_name <- fig_emm_sm
-```
-
-```{r}
 save_figure_to_workbook(
-    wb,
-    sheet_name ,
-    figure_name,
-    figure_file,
-    width = 8,
-    height = 6,
-    dpi = 300
+  wb = wb,
+  sheet_name = "SM Figure",
+  figure_file = "../artifacts/SM_Interaction.png",
+  plot_obj = fig_emm_sm,
+  width = 8,
+  height = 6,
+  dpi = 300
 )
 ```
 
-#### m
+## significant panels —————————-
 
-Within a specific combination of structure, distribution, and importance, does Proself differ from Prosocial?
+Explore the significant panels
+
+-   High/Common
+
+-   High/Unique
+
+### high & common
+
+best both sets of simple effects because both Structure x Motivation is significant
 
 ```{r}
-emm_mot <- emmeans(
+emm_high_common <- emmeans(
   model_binom,
-  ~ motivation_number01 |
-    structure_number01 *
-    InfoDistribution *
-    InfoImportance,
+  ~ structure_number01 * motivation_number01, # note *
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Common"
+  ),
   type = "response"
 )
 
-pairs(
-  emm_mot, 
-  adjust = "holm")
+emm_high_common
 ```
 
-#### s
-
-Within a specific motivation, distribution, and importance condition, does Interindividual differ from Intergroup?
+compare Structure within each Motivation
 
 ```{r}
-emm_struct <- emmeans(
+hc_structure <- emmeans(
   model_binom,
-  ~ structure_number01 |
-    motivation_number01 *
-    InfoDistribution *
-    InfoImportance,
+  ~ structure_number01 | motivation_number01, # note order and |
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Common"
+  ),
   type = "response"
 )
 
-pairs(
-  emm_struct,
-  adjust = "holm"
-  )
+pairs(hc_structure)
 ```
 
-#### high imp & unique
+compare Motivation within each Structure
+
+```{r}
+hc_motivation <- emmeans(
+  model_binom,
+  ~ motivation_number01 | structure_number01,  # note order and |
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Common"
+  ),
+  type = "response"
+)
+
+pairs(hc_motivation)
+```
+
+### high & unique
+
+no significant structure x motivation interaction, but reason to look more closely at the prosocial/intergroup
+
+starting with the four predicted probabilties
 
 ```{r}
 emm_high_unique <- emmeans(
   model_binom,
-  ~ structure_number01 * motivation_number01,
+  ~ structure_number01 * motivation_number01, # note *
   at = list(
     InfoImportance = "High Importance",
     InfoDistribution = "Unique"
@@ -762,7 +870,43 @@ pairs(
 )
 ```
 
-#### high imp & unique & structure
+#### Structure x Motivation
+
+Among Prosocial participants, is sharing lower in the Intergroup condition than in the Interindividual condition?
+
+```{r}
+hu_structure <- emmeans(
+  model_binom,
+  ~ structure_number01 | motivation_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Unique"
+  ),
+  type = "response"
+)
+
+pairs(hu_structure)
+```
+
+#### Motivation within Structure
+
+Within the Intergroup condition, do Prosocial participants differ from Proself participants?
+
+```{r}
+hu_motivation <- emmeans(
+  model_binom,
+  ~ motivation_number01 | structure_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Unique"
+  ),
+  type = "response"
+)
+
+pairs(hu_motivation)
+```
+
+### high I & unique & structure
 
 Among prosocial participants, is the intergroup different from the interindividual? (And also, among the proself participants, is the intergroup different from the interindividual?)
 
@@ -811,123 +955,7 @@ save_output_to_workbook(
 )
 ```
 
-### joint_tests()
-
-#### info importance & info distribution
-
-```{r}
-joint_panels <- joint_tests(
-  model_binom,
-  by = c("InfoImportance", "InfoDistribution")
-)
-
-joint_panels
-```
-
-| Information condition | Structure | Motivation | Structure × Motivation | What it means |
-|---------------|---------------|---------------|---------------|---------------|
-| **High, Common** | .869 | **\< .001** | **\< .001** | The effect of structure depends on motivation. Unpack with simple interactions. |
-| **High, Unique** | **.004** | **\< .001** | .246 | Structure and motivation both have significant effects, with [no]{.underline} evidence that their effects depend on one another. |
-| **Low, Common** | .273 | .185 | .110 | [No]{.underline} significant effects of structure, motivation, or their interaction. |
-| **Low, Unique** | .618 | .051 | .210 | [No]{.underline} significant effects at the conventional .05 level. Motivation is close, but does not reach significance. |
-
-```{r}
-save_output_to_workbook(
-  wb, 
-  sheet_name = "Joint Panels", 
-  output = joint_panels
-)
-```
-
-##### emmeans()
-
-Explore the significant panels
-
--   High/Common
-
--   High/Unique
-
-###### High/Common
-
-```{r}
-emm_high_common <- emmeans(
-  model_binom,
-  ~ structure_number01 * motivation_number01,
-  at = list(
-    InfoImportance = "High Importance",
-    InfoDistribution = "Common"
-  ),
-  type = "response"
-)
-```
-
-compare Structure within each Motivation
-
-```{r}
-pairs(
-  emmeans(
-    model_binom,
-    ~ structure_number01 | motivation_number01,
-    at = list(
-      InfoImportance = "High Importance",
-      InfoDistribution = "Common"
-    ),
-    type = "response"
-  ),
-  adjust = "holm"
-)
-```
-
-compare Motivation within each Structure
-
-```{r}
-pairs(
-  emmeans(
-    model_binom,
-    ~ motivation_number01 | structure_number01,
-    at = list(
-      InfoImportance = "High Importance",
-      InfoDistribution = "Common"
-    ),
-    type = "response"
-  ),
-  adjust = "holm"
-)
-```
-
-###### High/Unique
-
-overall difference between Interindividual and Intergroup
-
-```{r}
-emmeans(
-  model_binom,
-  pairwise ~ structure_number01,
-  at = list(
-    InfoImportance = "High Importance",
-    InfoDistribution = "Unique"
-  ),
-  type = "response",
-  adjust = "holm"
-)
-```
-
-overall difference between Proself and Prosocial
-
-```{r}
-emmeans(
-  model_binom,
-  pairwise ~ motivation_number01,
-  at = list(
-    InfoImportance = "High Importance",
-    InfoDistribution = "Unique"
-  ),
-  type = "response",
-  adjust = "holm"
-)
-```
-
-## Save to excel
+## Save to excel —————————————-
 
 ```{r}
 saveWorkbook(
@@ -937,7 +965,7 @@ saveWorkbook(
 )
 ```
 
-## End
+## End —————————————-
 
 ```{r}
 print("end of script")

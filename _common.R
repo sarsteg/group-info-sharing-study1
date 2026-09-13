@@ -556,8 +556,9 @@ save_output_to_workbook <- function(wb, sheet_name, output) {
 save_figure_to_workbook <- function(
     wb,
     sheet_name,
-    figure_name,
     figure_file,
+    plot_obj = NULL, # ggplot objects
+    plot_fun = NULL, # base R plotting function
     width = 8,
     height = 6,
     dpi = 300
@@ -571,14 +572,34 @@ save_figure_to_workbook <- function(
   # Create worksheet
   addWorksheet(wb, sheet_name)
   
-  # Save figure to file
-  ggsave(
-    filename = figure_file,
-    plot = figure_name,
-    width = width,
-    height = height,
-    dpi = dpi
-  )
+  # Save figure
+  if (!is.null(plot_obj) && inherits(plot_obj, "ggplot")) {
+    
+    ggsave(
+      filename = figure_file,
+      plot = plot_obj,
+      width = width,
+      height = height,
+      dpi = dpi
+    )
+    
+  } else if (!is.null(plot_fun) && is.function(plot_fun)) {
+    
+    png(
+      filename = figure_file,
+      width = width,
+      height = height,
+      units = "in",
+      res = dpi
+    )
+    
+    plot_fun()
+    
+    dev.off()
+    
+  } else {
+    stop("Provide either a ggplot object in plot_obj or a base R plotting function in plot_fun.")
+  }
   
   # Insert figure into workbook
   insertImage(
@@ -592,6 +613,32 @@ save_figure_to_workbook <- function(
     units = "in"
   )
 }
+
+# # Examples
+# 
+# #ggplot
+# save_figure_to_workbook(
+#   wb = wb,
+#   sheet_name = "SM Figure",
+#   figure_file = "../artifacts/SM_Interaction.png",
+#   plot_obj = fig_emm_sm,
+#   width = 8,
+#   height = 6,
+#   dpi = 300
+# )
+# 
+# # Base plot
+# save_figure_to_workbook(
+#   wb = wb,
+#   sheet_name = "Binomial Res",
+#   figure_file = "../artifacts/fig_binomial_sim_res.png",
+#   plot_fun = function() plot(model_binom_sim_res),
+#   width = 10,
+#   height = 6,
+#   dpi = 300
+# )
+
+
 
 
 
