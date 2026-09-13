@@ -211,13 +211,15 @@ table(dat_long$ItemResponse, useNA = "ifany")
 write.xlsx(dat_long, "../artifacts/binominal_data.xlsx", asTable = TRUE, colWidths = "auto")
 ```
 
-## controls
+## control model
 
 ### create form
 
 ```{r}
 #  This first part is only writing out the variables so that when I run the model it is easier to see the options in the model
 form_controls <- ItemResponse ~ # ItemResponse is if the participant chose share or not share
+  InfoDistribution +
+  InfoImportance +
   Q14.1 + # 14.1 is age
   sex + # These are control variables
   SES_mean +
@@ -241,7 +243,132 @@ model_controls <- glmmTMB(
 summary(model_controls)
 ```
 
+```{r}
+confint(model_controls)
+```
+
 Only sex and need for cognition were significant. Therefore, only these two control variables are kept in the full model.
+
+#### table
+
+```{r}
+coef_table <- summary(model_controls)$coefficients$cond
+ci <- confint(model_controls, parm = "beta_")
+
+results <- data.frame(
+  Predictor = rownames(coef_table),
+  b = coef_table[, "Estimate"],
+  SE = coef_table[, "Std. Error"],
+  Wald_chisq = coef_table[, "z value"]^2,
+  p = coef_table[, "Pr(>|z|)"],
+  OR = exp(coef_table[, "Estimate"]),
+  CI_lower = exp(ci[, 1]),
+  CI_upper = exp(ci[, 2]),
+  row.names = NULL
+)
+
+# Labels for dissertation table
+predictor_labels <- c(
+  "(Intercept)" = "Intercept",
+  "InfoDistributionUnique" = "Common (0) vs. Unique (1)",
+  "InfoImportanceLow Importance" = "Low (0) vs. High (1)",
+  "Q14.1" = "Age",
+  "sex" = "Sex (female = 1)",
+  "SES_mean" = "Socioeconomic Status",
+  "hispanic" = "Hispanic",
+  "NeedCog_Mean" = "Need for Cognition",
+  "DirtyDozen_Narcissism" = "Narcissism",
+  "DirtyDozen_Psychopathy" = "Psychopathy",
+  "DirtyDozen_Machiavellianism" = "Machiavellianism",
+  "SVO_angle" = "SVO angle"
+)
+
+results$Predictor <- predictor_labels[results$Predictor]
+
+# Add section rows
+add_section <- function(label, template) {
+  row <- template[1, ]
+  row[] <- NA
+  row$Predictor <- label
+  row
+}
+
+results <- rbind(
+  results,
+  add_section("Within Participant Variables", results),
+  add_section("Control Variables", results)
+)
+
+# Desired row order
+row_order <- c(
+  "Intercept",
+  "Within Participant Variables",
+  "Common (0) vs. Unique (1)",
+  "Low (0) vs. High (1)",
+  "Control Variables",
+  "Age",
+  "Sex (female = 1)",
+  "Socioeconomic Status",
+  "Hispanic",
+  "Need for Cognition",
+  "Narcissism",
+  "Psychopathy",
+  "Machiavellianism",
+  "SVO angle"
+)
+
+final_results <- results[
+  match(row_order, results$Predictor),
+]
+
+rownames(final_results) <- NULL
+
+# Format regular statistics
+stat_cols <- c("b", "SE", "Wald_chisq", "OR", "CI_lower", "CI_upper")
+
+final_results[stat_cols] <-
+  lapply(final_results[stat_cols], format_stat)
+
+# Format p-values separately
+final_results$p <-
+  format_stat(final_results$p, p_value = TRUE)
+
+# Combine OR and CI into one column
+final_results$`OR [95% CI]` <- with(
+  final_results,
+  ifelse(
+    OR == "",
+    "",
+    paste0(OR, " [", CI_lower, ", ", CI_upper, "]")
+  )
+)
+
+# Remove separate OR and CI columns
+final_results <- final_results[
+  , !names(final_results) %in%
+    c("OR", "CI_lower", "CI_upper")
+]
+
+controls_binomial <- final_results
+
+rm(
+  coef_table,
+  ci,
+  results,
+  predictor_labels,
+  row_order,
+  stat_cols, 
+  final_results
+)
+
+controls_binomial
+```
+
+###### 💾controls_binomial_table
+
+```{r}
+save_output_to_workbook(wb, "Control Variables", controls_binomial_table)
+```
 
 ## full model
 
@@ -277,69 +404,183 @@ saveRDS(model_binom,
         )
 ```
 
-#### model_logit_table
+### table
 
 ```{r}
-model_logit_table <- modelsummary(
-  model_binom,
-  output = "data.frame",
-  estimate = "estimate",
-  statistic = c(
-    "SE" = "std.error",
-    "z" = "statistic",
-    "p" = "p.value",
-    "95% CI" = "conf.int"
-  ),
-  conf_level = 0.95,
-  exponentiate = FALSE,
-  stars = TRUE,
-  fmt = 3
+coef_table <- summary(model_binom)$coefficients$cond
+ci <- confint(model_binom, parm = "beta_")
+
+results <- data.frame(
+  Predictor = rownames(coef_table),
+  b = coef_table[, "Estimate"],
+  SE = coef_table[, "Std. Error"],
+  Wald_chisq = coef_table[, "z value"]^2,
+  p = coef_table[, "Pr(>|z|)"],
+  OR = exp(coef_table[, "Estimate"]),
+  CI_lower = exp(ci[, 1]),
+  CI_upper = exp(ci[, 2]),
+  row.names = NULL
 )
 
-model_logit_table
+predictor_labels <- c(
+  "(Intercept)" = "Intercept",
+
+  "sex" =
+    "Sex (1 = female)",
+
+  "NeedCog_Mean" =
+    "Need for Cognition",
+
+  "structure_number01Intergroup" =
+    "Interindividual (0) vs. Intergroup (1)",
+
+  "motivation_number01Prosocial" =
+    "Proself (0) vs. Prosocial (1)",
+
+  "InfoDistributionUnique" =
+    "Common (0) vs. Unique (1)",
+
+  "InfoImportanceLow Importance" =
+    "Low (0) vs. High (1)",
+
+  "structure_number01Intergroup:motivation_number01Prosocial" =
+    "Structure × Motivation",
+
+  "structure_number01Intergroup:InfoDistributionUnique" =
+    "Structure × Distribution",
+
+  "motivation_number01Prosocial:InfoDistributionUnique" =
+    "Motivation × Distribution",
+
+  "structure_number01Intergroup:InfoImportanceLow Importance" =
+    "Structure × Importance",
+
+  "motivation_number01Prosocial:InfoImportanceLow Importance" =
+    "Motivation × Importance",
+
+  "InfoDistributionUnique:InfoImportanceLow Importance" =
+    "Distribution × Importance",
+
+  "structure_number01Intergroup:motivation_number01Prosocial:InfoDistributionUnique" =
+    "Structure × Motivation × Distribution",
+
+  "structure_number01Intergroup:motivation_number01Prosocial:InfoImportanceLow Importance" =
+    "Structure × Motivation × Importance",
+
+  "structure_number01Intergroup:InfoDistributionUnique:InfoImportanceLow Importance" =
+    "Structure × Distribution × Importance",
+
+  "motivation_number01Prosocial:InfoDistributionUnique:InfoImportanceLow Importance" =
+    "Motivation × Distribution × Importance",
+
+  "structure_number01Intergroup:motivation_number01Prosocial:InfoDistributionUnique:InfoImportanceLow Importance" =
+    "Structure × Motivation × Distribution × Importance"
+)
+
+results$Predictor <- predictor_labels[results$Predictor]
+
+add_section <- function(label, template) {
+  row <- template[1, ]
+  row[] <- NA
+  row$Predictor <- label
+  row
+}
+
+results <- rbind(
+  results,
+  add_section("Control Variables", results),
+  add_section("Between Manipulations", results),
+  add_section("Within Manipulations", results),
+  add_section("Interactions", results)
+)
+
+row_order <- c(
+  "Intercept",
+
+  "Control Variables",
+  "Sex (1 = female)",
+  "Need for Cognition",
+
+  "Between Manipulations",
+  "Interindividual (0) vs. Intergroup (1)",
+  "Proself (0) vs. Prosocial (1)",
+
+  "Within Manipulations",
+  "Common (0) vs. Unique (1)",
+  "Low (0) vs. High (1)",
+
+  "Interactions",
+  "Structure × Motivation",
+  "Structure × Distribution",
+  "Motivation × Distribution",
+  "Structure × Importance",
+  "Motivation × Importance",
+  "Distribution × Importance",
+  "Structure × Motivation × Distribution",
+  "Structure × Motivation × Importance",
+  "Structure × Distribution × Importance",
+  "Motivation × Distribution × Importance",
+  "Structure × Motivation × Distribution × Importance"
+)
+
+final_model_results <- results[
+  match(row_order, results$Predictor),
+]
+
+rownames(final_model_results) <- NULL
+
+stat_cols <- c(
+  "b",
+  "SE",
+  "Wald_chisq",
+  "OR",
+  "CI_lower",
+  "CI_upper"
+)
+
+final_model_results[stat_cols] <-
+  lapply(final_model_results[stat_cols], format_stat)
+
+final_model_results$p <-
+  format_stat(final_model_results$p, p_value = TRUE)
+
+final_model_results$`OR [95% CI]` <- with(
+  final_model_results,
+  ifelse(
+    OR == "",
+    "",
+    paste0(OR, " [", CI_lower, ", ", CI_upper, "]")
+  )
+)
+
+final_model_results <- final_model_results[
+  , !names(final_model_results) %in%
+    c("OR", "CI_lower", "CI_upper")
+]
+
+model_binomial_table <- final_model_results
+model_binomial_table
 ```
 
-###### 💾model logit
+###### 💾model_binomial_table
 
 ```{r}
-save_output_to_workbook(
-  wb,
-  "Model Logit",
-  model_logit_table
-)
+save_output_to_workbook(wb, "Binomial Table", model_binomial_table)
 ```
 
-#### model_or_table
+##### omnibus test
+
+overall main effects and interactions
+
+similar to Type III ANOVA-style table
 
 ```{r}
-model_or_table <- modelsummary(
-  model_binom,
-  output = "data.frame",
-  estimate = "estimate",
-  statistic = c(
-    "95% CI" = "conf.int",
-    "p" = "p.value"
-  ),
-  conf_level = 0.95,
-  exponentiate = TRUE,
-  stars = TRUE,
-  fmt = 3
-)
+joint_results <- joint_tests(model_binom)
 
-model_or_table
+joint_results
 ```
 
-###### 💾modle or
-
-```{r}
-save_output_to_workbook(
-  wb,
-  "Model Odds Ratios",
-  model_or_table
-)
-```
-
-### emmeans()
+## emmeans()
 
 <https://rvlenth.github.io/emmeans/>
 
@@ -351,75 +592,9 @@ These are means that are from the model, which means that they have all of the o
 
 Also, random note about the package: the model was built with glmmTMB, so emmeans is relying on methods supplied by glmmTMB to tell it how to use the model data, fixed effects, covariance matrix, etc to compute the estimated marginal means.
 
-#### s \* m \* d \* I
-
-```{r}
-emm_table <- emmeans(
-  model_binom,
-  ~ structure_number01 *
-    motivation_number01 *
-    InfoDistribution *
-    InfoImportance,
-  type = "response"
-)
-
-emm_table
-```
-
-```{r}
-emm_table_contrast <- contrast(emm_table)
-emm_table_contrast
-```
-
-##### coefficients
-
 <https://rdrr.io/r/stats/coef.html>
 
 coef is a generic function which extracts model coefficients from objects returned by modeling functions. coefficients is an alias for it.
-
-```{r}
-coef(emm_table_contrast)
-```
-
-###### 💾All emmeans
-
-```{r}
-save_output_to_workbook(wb, "All emmean", emm_table)
-```
-
-#### m
-
-Within a specific combination of structure, distribution, and importance, does Proself differ from Prosocial?
-
-```{r}
-emm_mot <- emmeans(
-  model_binom,
-  ~ motivation_number01 |
-    structure_number01 *
-    InfoDistribution *
-    InfoImportance,
-  type = "response"
-)
-
-pairs(emm_mot)
-```
-
-#### s
-
-Within a specific motivation, distribution, and importance condition, does Interindividual differ from Intergroup?
-
-```{r}
-emm_struct <- emmeans(
-  model_binom,
-  ~ structure_number01 |
-    motivation_number01 *
-    InfoDistribution *
-    InfoImportance,
-  type = "response"
-)
-
-pairs(emm_struct)
-```
 
 #### s \* m
 
@@ -432,7 +607,7 @@ emm_sm <- emmeans(
 )
 ```
 
-###### 💾SM emmean
+###### 💾emm_sm
 
 ```{r}
 save_output_to_workbook(wb, "SM emmean", emm_sm)
@@ -448,7 +623,7 @@ contrast(
 )
 ```
 
-###### 💾 SM Contrasts
+###### 💾 contrasts_emm_sm
 
 ```{r}
 save_output_to_workbook(
@@ -464,7 +639,7 @@ save_output_to_workbook(
 
 ```
 
-##### visualize, fig_emm_sm
+##### fig_emm_sm
 
 ```{r}
 emm_sm_df <- as.data.frame(emm_sm)
@@ -521,6 +696,40 @@ save_figure_to_workbook(
     height = 6,
     dpi = 300
 )
+```
+
+#### m
+
+Within a specific combination of structure, distribution, and importance, does Proself differ from Prosocial?
+
+```{r}
+emm_mot <- emmeans(
+  model_binom,
+  ~ motivation_number01 |
+    structure_number01 *
+    InfoDistribution *
+    InfoImportance,
+  type = "response"
+)
+
+pairs(emm_mot)
+```
+
+#### s
+
+Within a specific motivation, distribution, and importance condition, does Interindividual differ from Intergroup?
+
+```{r}
+emm_struct <- emmeans(
+  model_binom,
+  ~ structure_number01 |
+    motivation_number01 *
+    InfoDistribution *
+    InfoImportance,
+  type = "response"
+)
+
+pairs(emm_struct)
 ```
 
 #### high imp & unique
@@ -613,7 +822,7 @@ joint_panels
 ```
 
 | Information condition | Structure | Motivation | Structure × Motivation | What it means |
-|----|----|----|----|----|
+|---------------|---------------|---------------|---------------|---------------|
 | **High, Common** | .869 | **\< .001** | **\< .001** | The effect of structure depends on motivation. Unpack with simple interactions. |
 | **High, Unique** | **.004** | **\< .001** | .246 | Structure and motivation both have significant effects, with [no]{.underline} evidence that their effects depend on one another. |
 | **Low, Common** | .273 | .185 | .110 | [No]{.underline} significant effects of structure, motivation, or their interaction. |

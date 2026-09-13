@@ -595,6 +595,53 @@ save_figure_to_workbook <- function(
 
 
 
+format_stat <- function(x, p_value = FALSE) {
+  
+  # Half-up rounding helper
+  round_half_up <- function(value, digits) {
+    z <- 10^digits
+    sign(value) * floor(abs(value) * z + 0.5) / z
+  }
+  
+  if (p_value) {
+    
+    rounded_2 <- round_half_up(x, 2)
+    rounded_3 <- round_half_up(x, 3)
+    
+    p_text <- ifelse(
+      is.na(x), "",
+      ifelse(
+        x < .001,
+        "< .001",
+        ifelse(
+          rounded_2 == 0,
+          sub("^0", "", sprintf("%.3f", rounded_3)),
+          sub("^0", "", sprintf("%.2f", rounded_2))
+        )
+      )
+    )
+    
+    stars <- ifelse(
+      is.na(x), "",
+      ifelse(
+        x < .01, "**",
+        ifelse(x < .05, "*", "")
+      )
+    )
+    
+    return(paste0(p_text, stars))
+  }
+  
+  # Other statistics: 2-decimal half-up rounding
+  rounded_2 <- round_half_up(x, 2)
+  
+  ifelse(
+    is.na(x),
+    "",
+    sprintf("%.2f", rounded_2)
+  )
+}
+
 
 
 
