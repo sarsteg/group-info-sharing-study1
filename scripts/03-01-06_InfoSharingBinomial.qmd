@@ -252,8 +252,6 @@ summary(model_controls)
 confint(model_controls)
 ```
 
-Only sex and need for cognition were significant. Therefore, only these two control variables are kept in the full model.
-
 #### table
 
 ```{r}
@@ -276,7 +274,7 @@ results <- data.frame(
 predictor_labels <- c(
   "(Intercept)" = "Intercept",
   "InfoDistributionUnique" = "Common (0) vs. Unique (1)",
-  "InfoImportanceLow Importance" = "Low (0) vs. High (1)",
+  "InfoImportanceHigh Importance" = "Low (0) vs. High (1)",
   "Q14.1" = "Age",
   "sex" = "Sex (female = 1)",
   "SES_mean" = "Socioeconomic Status",
@@ -375,6 +373,10 @@ controls_binomial
 save_output_to_workbook(wb, "Control Variables", controls_binomial)
 ```
 
+### interpretation
+
+Only sex and need for cognition were significant. Therefore, only these two control variables are kept in the full model.
+
 ## full model —————————————-
 
 ### create form
@@ -405,6 +407,10 @@ model_binom <- glmmTMB( # The package being used is glmmTMB
 summary(model_binom)
 ```
 
+#### convergence
+
+Did it run successfully?
+
 ```{r}
 # The model output shows estimates and random effects without an obvious convergence warning
 # TRUE = passes convergence check
@@ -417,16 +423,16 @@ saveRDS(model_binom,
         )
 ```
 
-### dispersion
+#### dispersion
+
+Dispersion does not appear to be an issue in the model.
 
 ```{r}
 model_binom_sim_res <- simulateResiduals(
   fittedModel = model_binom
 )
 
-fig_model_binom_sim_res <- plot(model_binom_sim_res)
-
-fig_model_binom_sim_res
+plot(model_binom_sim_res)
 ```
 
 ```{r}
@@ -469,6 +475,11 @@ Dispersion does not appear to be an issue due to non-significance in the test.
 ### table
 
 ```{r}
+#| include: false
+rownames(summary(model_binom)$coefficients$cond)
+```
+
+```{r}
 coef_table <- summary(model_binom)$coefficients$cond
 ci <- confint(model_binom, parm = "beta_")
 
@@ -502,7 +513,7 @@ predictor_labels <- c(
   "InfoDistributionUnique" =
     "Common (0) vs. Unique (1)",
 
-  "InfoImportanceLow Importance" =
+  "InfoImportanceHigh Importance" =
     "Low (0) vs. High (1)",
 
   "structure_number01Intergroup:motivation_number01Prosocial" =
@@ -514,28 +525,28 @@ predictor_labels <- c(
   "motivation_number01Prosocial:InfoDistributionUnique" =
     "Motivation × Distribution",
 
-  "structure_number01Intergroup:InfoImportanceLow Importance" =
+  "structure_number01Intergroup:InfoImportanceHigh Importance" =
     "Structure × Importance",
 
-  "motivation_number01Prosocial:InfoImportanceLow Importance" =
+  "motivation_number01Prosocial:InfoImportanceHigh Importance" =
     "Motivation × Importance",
 
-  "InfoDistributionUnique:InfoImportanceLow Importance" =
+  "InfoDistributionUnique:InfoImportanceHigh Importance" =
     "Distribution × Importance",
 
   "structure_number01Intergroup:motivation_number01Prosocial:InfoDistributionUnique" =
     "Structure × Motivation × Distribution",
 
-  "structure_number01Intergroup:motivation_number01Prosocial:InfoImportanceLow Importance" =
+  "structure_number01Intergroup:motivation_number01Prosocial:InfoImportanceHigh Importance" =
     "Structure × Motivation × Importance",
 
-  "structure_number01Intergroup:InfoDistributionUnique:InfoImportanceLow Importance" =
+  "structure_number01Intergroup:InfoDistributionUnique:InfoImportanceHigh Importance" =
     "Structure × Distribution × Importance",
 
-  "motivation_number01Prosocial:InfoDistributionUnique:InfoImportanceLow Importance" =
+  "motivation_number01Prosocial:InfoDistributionUnique:InfoImportanceHigh Importance" =
     "Motivation × Distribution × Importance",
 
-  "structure_number01Intergroup:motivation_number01Prosocial:InfoDistributionUnique:InfoImportanceLow Importance" =
+  "structure_number01Intergroup:motivation_number01Prosocial:InfoDistributionUnique:InfoImportanceHigh Importance" =
     "Structure × Motivation × Distribution × Importance"
 )
 
@@ -630,11 +641,15 @@ model_binomial_table
 save_output_to_workbook(wb, "Binomial Table", model_binomial_table)
 ```
 
-### omnibus test
+## joint_test() —————————————-
 
 overall main effects and interactions
 
 similar to Type III ANOVA-style table
+
+#### full
+
+Output should be similar to the binomial regression.
 
 ```{r}
 joint_results <- joint_tests(model_binom)
@@ -644,6 +659,10 @@ joint_results
 
 #### decomposition by info I & D
 
+Additional breakdown by information importance and information distribution. This checks which of the combinations of information characteristics has something interesting happening.
+
+Which effects are statistically significant within each information condition?
+
 ```{r}
 joint_panels <- joint_tests(
   model_binom,
@@ -651,6 +670,68 @@ joint_panels <- joint_tests(
 )
 
 joint_panels
+```
+
+```{r}
+joint_panels_table <- as.data.frame(joint_panels) %>%
+  filter(
+    `model term` %in% c(
+      "structure_number01",
+      "motivation_number01",
+      "structure_number01:motivation_number01"
+    )
+  ) %>%
+  mutate(
+    Effect = case_when(
+      `model term` == "structure_number01" ~ "Structure",
+      `model term` == "motivation_number01" ~ "Motivation",
+      `model term` == "structure_number01:motivation_number01" ~
+        "Structure × Motivation"
+    ),
+
+    Chisq_formatted = format_stat(Chisq),
+
+    p_formatted = format_stat(
+      p.value,
+      p_value = TRUE
+    ),
+
+    result = paste0(
+      Chisq_formatted,
+      " (",
+      p_formatted,
+      ")"
+    ),
+
+    `Information condition` = paste(
+      gsub(" Importance", "", InfoImportance),
+      InfoDistribution,
+      sep = " , "
+    )
+  ) %>%
+  select(
+    `Information condition`,
+    Effect,
+    result
+  ) %>%
+  pivot_wider(
+    names_from = Effect,
+    values_from = result
+  )
+
+names(joint_panels_table)[
+  names(joint_panels_table) == "Structure"
+] <- "Structure χ² (p)"
+
+names(joint_panels_table)[
+  names(joint_panels_table) == "Motivation"
+] <- "Motivation χ² (p)"
+
+names(joint_panels_table)[
+  names(joint_panels_table) == "Structure × Motivation"
+] <- "Structure × Motivation χ² (p)"
+
+joint_panels_table
 ```
 
 | Information condition | Structure | Motivation | Structure × Motivation | What it means |
@@ -665,6 +746,12 @@ save_output_to_workbook(
   wb, 
   sheet_name = "Joint Panels", 
   output = joint_panels
+)
+
+save_output_to_workbook(
+  wb, 
+  "Joint Panels Table",
+  joint_panels_table
 )
 ```
 
@@ -696,6 +783,64 @@ emm_sm <- emmeans(
   ~ structure_number01 * motivation_number01 |
     InfoDistribution * InfoImportance,
   type = "response"
+)
+```
+
+What does sharing look like in each condition?
+
+```{r}
+emm_sm_df <- as.data.frame(emm_sm)
+
+emm_sm_df <- emm_sm_df %>%
+  mutate(
+    `Probability [95% CI]` = sprintf(
+      "%.2f [%.2f, %.2f]",
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+
+sharing_condition_table <- emm_sm_df %>%
+  mutate(
+    Condition = paste(
+      InfoDistribution,
+      gsub(" Importance", "", InfoImportance),
+      sep = ", "
+    ),
+    Group = paste(
+      structure_number01,
+      motivation_number01
+    )
+  ) %>%
+  select(
+    Condition,
+    Group,
+    `Probability [95% CI]`
+  ) %>%
+  tidyr::pivot_wider(
+    names_from = Group,
+    values_from = `Probability [95% CI]`
+  )  %>%
+  select(
+    Condition,
+    `Interindividual Prosocial`,
+    `Interindividual Proself`,
+    `Intergroup Prosocial`,
+    `Intergroup Proself`
+  )
+
+
+sharing_condition_table
+```
+
+###### 💾sharing_condition_table
+
+```{r}
+save_output_to_workbook(
+  wb, 
+  "Emmeans x Condition", 
+  sharing_condition_table
 )
 ```
 
@@ -793,7 +938,7 @@ Explore the significant panels
 
 ### high & common
 
-best both sets of simple effects because both Structure x Motivation is significant
+both sets of simple effects because both Structure x Motivation is significant
 
 ```{r}
 emm_high_common <- emmeans(
@@ -807,9 +952,29 @@ emm_high_common <- emmeans(
 )
 
 emm_high_common
+
+pairs(emm_high_common)
 ```
 
-compare Structure within each Motivation
+```{r}
+save_output_to_workbook(
+  wb,
+  "HC emmeans",
+  as.data.frame(emm_high_common)
+)
+
+save_output_to_workbook(
+  wb,
+  "HC Pairs",
+  as.data.frame(pairs(emm_high_common))
+)
+```
+
+#### compare Structure within each Motivation
+
+-   Does Structure matter among Proself participants?
+
+-   Does Structure matter among Prosocial participants?
 
 ```{r}
 hc_structure <- emmeans(
@@ -822,10 +987,32 @@ hc_structure <- emmeans(
   type = "response"
 )
 
+hc_structure
+
 pairs(hc_structure)
 ```
 
-compare Motivation within each Structure
+```{r}
+save_output_to_workbook(
+  wb,
+  "HC Structure Emmeans",
+  hc_structure
+)
+
+save_output_to_workbook(
+  wb,
+  "HC Structure Pairs",
+  as.data.frame(pairs(hc_structure))
+)
+```
+
+#### compare Motivation within each Structure
+
+-   Does Motivation matter in the Interindividual condition?
+
+<!-- -->
+
+-   Does Motivation matter in the Intergroup condition?
 
 ```{r}
 hc_motivation <- emmeans(
@@ -838,19 +1025,41 @@ hc_motivation <- emmeans(
   type = "response"
 )
 
+hc_motivation
+
 pairs(hc_motivation)
+```
+
+```{r}
+save_output_to_workbook(
+  wb,
+  "HC Motivation Emmeans",
+  hc_motivation
+)
+
+save_output_to_workbook(
+  wb,
+  "HC Motivation Pairs",
+  as.data.frame(pairs(hc_motivation))
+)
 ```
 
 ### high & unique
 
 no significant structure x motivation interaction, but reason to look more closely at the prosocial/intergroup
 
-starting with the four predicted probabilties
+structure was significant -\> further investigation
+
+motivation was significant -\> further investigation
+
+#### Structure
+
+Across Motivation conditions, do Interindividual and Intergroup differ for High/Unique information?
 
 ```{r}
-emm_high_unique <- emmeans(
+hu_structure_overall <- emmeans(
   model_binom,
-  ~ structure_number01 * motivation_number01, # note *
+  ~ structure_number01,
   at = list(
     InfoImportance = "High Importance",
     InfoDistribution = "Unique"
@@ -858,21 +1067,36 @@ emm_high_unique <- emmeans(
   type = "response"
 )
 
-emm_high_unique
+hu_structure_overall
+
+pairs(hu_structure_overall)
 ```
 
-Are those two structure differences themselves significantly different from one another? No, there is insufficient evidence that the structure effect is statistically different between Proself and Prosocial. Shown in the contrast below.
-
 ```{r}
-pairs(
-  emm_high_unique, 
-  adjust = "holm"
+save_output_to_workbook(
+  wb,
+  "HU Structure Overall",
+  hu_structure_overall
+)
+
+save_output_to_workbook(
+  wb,
+  "HU Structure Pairs",
+  as.data.frame(pairs(hu_structure_overall))
 )
 ```
 
-#### Structure x Motivation
+#### Structure \| Motivation
+
+Based on the visualization, prosocials seemed to be sharing less in the intergroup condition than in the interindividual condition. This is a check of that.
 
 Among Prosocial participants, is sharing lower in the Intergroup condition than in the Interindividual condition?
+
+Among prosocial participants, is the intergroup different from the interindividual? (And also, among the proself participants, is the intergroup different from the interindividual?)
+
+Yes, there is a significant different among Prosocial participants. (simple effect of structure?)
+
+Among prosocial participants, the predicted probability of sharing high-importance, unique information was significantly higher in the interindividual condition (.722) than in the intergroup condition (.445), OR = 3.24, p = .003.
 
 ```{r}
 hu_structure <- emmeans(
@@ -885,10 +1109,60 @@ hu_structure <- emmeans(
   type = "response"
 )
 
+hu_structure
+
 pairs(hu_structure)
 ```
 
-#### Motivation within Structure
+```{r}
+save_output_to_workbook(
+  wb,
+  "HU S|M Emmeans",
+  as.data.frame(hu_structure)
+)
+
+save_output_to_workbook(
+  wb,
+  "HU S|M Pairs",
+  as.data.frame(pairs(hu_structure))
+)
+```
+
+#### Motivation
+
+Across Structure conditions, do Proself and Prosocial differ for High/Unique information?
+
+```{r}
+hu_motivation_overall <- emmeans(
+  model_binom,
+  ~ motivation_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Unique"
+  ),
+  type = "response"
+)
+
+hu_motivation_overall
+
+pairs(hu_motivation_overall)
+```
+
+```{r}
+save_output_to_workbook(
+  wb,
+  "HU Motivation Emmeans",
+  as.data.frame(hu_motivation_overall)
+)
+
+save_output_to_workbook(
+  wb,
+  "HU Motivation Pairs",
+  as.data.frame(pairs(hu_motivation_overall))
+)
+```
+
+#### Motivation \| Structure
 
 Within the Intergroup condition, do Prosocial participants differ from Proself participants?
 
@@ -903,66 +1177,61 @@ hu_motivation <- emmeans(
   type = "response"
 )
 
+hu_motivation
+
 pairs(hu_motivation)
 ```
 
-### high I & unique & structure
-
-Among prosocial participants, is the intergroup different from the interindividual? (And also, among the proself participants, is the intergroup different from the interindividual?)
-
-Yes, there is a significant different among Prosocial participants. (simple effect of structure?)
-
-Among prosocial participants, the predicted probability of sharing high-importance, unique information was significantly higher in the interindividual condition (.722) than in the intergroup condition (.445), OR = 3.24, p = .003.
-
-```{r}
-emm_high_unique_structure <- emmeans(
-  model_binom,
-  ~ structure_number01 |
-    motivation_number01,
-  at = list(
-    InfoImportance = "High Importance",
-    InfoDistribution = "Unique"
-  ),
-  type = "response"
-)
-
-pairs(
-  emm_high_unique_structure,
-  adjust = "holm"
-)
-```
-
-###### 💾HU Prosocial emmean
-
 ```{r}
 save_output_to_workbook(
-  wb, 
-  "HU Prosocial emmean", 
-  emm_high_unique_structure
+  wb,
+  "HU M|S Emmeans",
+  as.data.frame(hu_motivation)
 )
-```
 
-###### 💾HU Prosocial Contrast
-
-```{r}
 save_output_to_workbook(
-  wb, 
-  sheet_name = "HU Prosocial Contrast", 
-  output =  pairs(
-              emm_high_unique_structure,
-              adjust = "holm"
-            )
+  wb,
+  "HU M|S Pairs",
+  as.data.frame(pairs(hu_motivation))
 )
 ```
 
 ## Save to excel —————————————-
 
 ```{r}
+data.frame(
+  Sheet = seq_along(names(wb)),
+  Worksheet = names(wb)
+)
+```
+
+```{r}
+#| warning: false
+
+cat("Formatting worksheets...\n")
+
+for (sheet in names(wb)) {
+  
+  cat("Formatting:", sheet, "\n")
+  
+  setColWidths(
+    wb,
+    sheet = sheet,
+    cols = 1:30,
+    widths = "auto"
+  )
+}
+
+cat("Finished formatting worksheets.\n")
+cat("Saving workbook...\n")
+
 saveWorkbook(
   wb,
   excel_export_file_location,
   overwrite = TRUE
 )
+
+cat("Workbook saved successfully.\n")
 ```
 
 ## End —————————————-
