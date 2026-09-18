@@ -25,6 +25,9 @@ library(modelsummary)
 library(gtsummary)
 library(broom)
 library(DHARMa)
+library(papaja)
+library(RColorBrewer)
+library(tibble)
 ```
 
 ```{r}
@@ -892,23 +895,94 @@ fig_emm_sm <- ggplot(
   )
 ) +
   geom_col(
-    position = position_dodge(width = 0.9)
+    position = position_dodge(width = 0.8),
+    width = 0.7,
+    alpha = 0.5,
+    color = "black",
+    linewidth = 0.2
   ) +
   geom_errorbar(
     aes(
-      ymin = asymp.LCL,
+      ymin = asymp.LCL, # 95% CI
       ymax = asymp.UCL
     ),
-    width = 0.2,
-    position = position_dodge(width = 0.9)
+    position = position_dodge(width = 0.8),
+    width = 0.25,
+    linewidth = 0.8
   ) +
   facet_grid(
     InfoDistribution ~ InfoImportance
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2)
+  ) +
+  coord_cartesian(
+    ylim = c(0, 1)
+  ) +
+  theme_apa() +
+  theme(
+    text = element_text(
+      size = 12,
+      family = "serif",
+      color = "black"
+    ),
+
+    axis.title = element_text(
+      size = 12,
+      face = "plain",
+      color = "black"
+    ),
+
+    axis.text = element_text(
+      size = 11,
+      face = "plain",
+      color = "black"
+    ),
+
+    strip.text = element_text(
+      size = 12,
+      face = "plain",
+      family = "serif"
+    ),
+
+    legend.title = element_text(
+      size = 12,
+      face = "plain"
+    ),
+
+    legend.text = element_text(
+      size = 11,
+      face = "plain"
+    ),
+
+    axis.ticks = element_line(
+      color = "black",
+      linewidth = 0.5
+    ),
+
+    axis.ticks.length = unit(0.10, "cm"),
+
+    axis.line = element_line(
+      color = "black"
+    ),
+
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank(),
+
+    panel.spacing = unit(0.8, "lines")
   ) +
   labs(
     x = "Structure",
     y = "Predicted Probability of Sharing",
     fill = "Motivation"
+  ) +
+  scale_fill_manual(
+    name = "Motivation",
+    values = c(
+      "Proself" = "#0C7BDC",
+      "Prosocial" = "#FFC20A"
+    )
   )
 
 fig_emm_sm
@@ -920,7 +994,7 @@ fig_emm_sm
 save_figure_to_workbook(
   wb = wb,
   sheet_name = "SM Figure",
-  figure_file = "../artifacts/SM_Interaction.png",
+  figure_file = "../figures/SM_Interaction.png",
   plot_obj = fig_emm_sm,
   width = 8,
   height = 6,
@@ -1193,6 +1267,312 @@ save_output_to_workbook(
   wb,
   "HU M|S Pairs",
   as.data.frame(pairs(hu_motivation))
+)
+```
+
+### Build table
+
+#### high Importance Common
+
+first check
+
+```{r}
+names(as.data.frame(
+  summary(
+    pairs(hc_structure),
+    type = "response",
+    infer = TRUE
+  )
+))
+```
+
+##### structure
+
+```{r}
+hc_structure_df <- as.data.frame(hc_structure) %>%
+  mutate(
+    P_CI = format_p_ci(
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+
+hc_structure_pairs <- as.data.frame(
+  summary(
+    pairs(hc_structure, adjust = "holm"),
+    type = "response",
+    infer = TRUE
+  )
+) %>%
+  mutate(
+    OR_CI = format_or_ci(
+      odds.ratio,
+      asymp.LCL,
+      asymp.UCL
+    ),
+    p_display = format_p_value(p.value)
+  )
+```
+
+##### motivation
+
+```{r}
+hc_motivation_df <- as.data.frame(hc_motivation) %>%
+  mutate(
+    P_CI = format_p_ci(
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+
+hc_motivation_pairs <- as.data.frame(
+  summary(
+    pairs(hc_motivation, adjust = "holm"),
+    type = "response",
+    infer = TRUE
+  )
+) %>%
+  mutate(
+    OR_CI = format_or_ci(
+      odds.ratio,
+      asymp.LCL,
+      asymp.UCL
+    ),
+    p_display = format_p_value(p.value)
+  )
+```
+
+##### table combine
+
+```{r}
+table_hc <- tribble(
+  ~Comparison, ~`P [95% CI]`, ~`OR [95% CI]`, ~p,
+
+  "Proself", "", "", "",
+
+  "  Interindividual",
+  hc_structure_df$P_CI[
+    hc_structure_df$structure_number01 == "Interindividual" &
+    hc_structure_df$motivation_number01 == "Proself"
+  ],
+  "", "",
+
+  "  Intergroup",
+  hc_structure_df$P_CI[
+    hc_structure_df$structure_number01 == "Intergroup" &
+    hc_structure_df$motivation_number01 == "Proself"
+  ],
+  "", "",
+
+  "  Interindividual vs. Intergroup",
+  "",
+  hc_structure_pairs$OR_CI[
+    hc_structure_pairs$motivation_number01 == "Proself"
+  ],
+  hc_structure_pairs$p_display[
+    hc_structure_pairs$motivation_number01 == "Proself"
+  ],
+
+  "Prosocial", "", "", "",
+
+  "  Interindividual",
+  hc_structure_df$P_CI[
+    hc_structure_df$structure_number01 == "Interindividual" &
+    hc_structure_df$motivation_number01 == "Prosocial"
+  ],
+  "", "",
+
+  "  Intergroup",
+  hc_structure_df$P_CI[
+    hc_structure_df$structure_number01 == "Intergroup" &
+    hc_structure_df$motivation_number01 == "Prosocial"
+  ],
+  "", "",
+
+  "  Interindividual vs. Intergroup",
+  "",
+  hc_structure_pairs$OR_CI[
+    hc_structure_pairs$motivation_number01 == "Prosocial"
+  ],
+  hc_structure_pairs$p_display[
+    hc_structure_pairs$motivation_number01 == "Prosocial"
+  ],
+
+  "Interindividual", "", "", "",
+
+  "  Proself",
+  hc_motivation_df$P_CI[
+    hc_motivation_df$structure_number01 == "Interindividual" &
+    hc_motivation_df$motivation_number01 == "Proself"
+  ],
+  "", "",
+
+  "  Prosocial",
+  hc_motivation_df$P_CI[
+    hc_motivation_df$structure_number01 == "Interindividual" &
+    hc_motivation_df$motivation_number01 == "Prosocial"
+  ],
+  "", "",
+
+  "  Proself vs. Prosocial",
+  "",
+  hc_motivation_pairs$OR_CI[
+    hc_motivation_pairs$structure_number01 == "Interindividual"
+  ],
+  hc_motivation_pairs$p_display[
+    hc_motivation_pairs$structure_number01 == "Interindividual"
+  ],
+
+  "Intergroup", "", "", "",
+
+  "  Proself",
+  hc_motivation_df$P_CI[
+    hc_motivation_df$structure_number01 == "Intergroup" &
+    hc_motivation_df$motivation_number01 == "Proself"
+  ],
+  "", "",
+
+  "  Prosocial",
+  hc_motivation_df$P_CI[
+    hc_motivation_df$structure_number01 == "Intergroup" &
+    hc_motivation_df$motivation_number01 == "Prosocial"
+  ],
+  "", "",
+
+  "  Proself vs. Prosocial",
+  "",
+  hc_motivation_pairs$OR_CI[
+    hc_motivation_pairs$structure_number01 == "Intergroup"
+  ],
+  hc_motivation_pairs$p_display[
+    hc_motivation_pairs$structure_number01 == "Intergroup"
+  ]
+)
+
+table_hc
+```
+
+#### high importance, unique
+
+```{r}
+hu_structure_df <- as.data.frame(hu_structure_overall) %>%
+  mutate(
+    P_CI = format_p_ci(
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+
+hu_structure_pairs <- as.data.frame(
+  summary(
+    pairs(hu_structure_overall, adjust = "holm"),
+    type = "response",
+    infer = TRUE
+  )
+) %>%
+  mutate(
+    OR_CI = format_or_ci(
+      odds.ratio,
+      asymp.LCL,
+      asymp.UCL
+    ),
+    p_display = format_p_value(p.value)
+  )
+```
+
+##### motivation
+
+```{r}
+hu_motivation_df <- as.data.frame(hu_motivation_overall) %>%
+  mutate(
+    P_CI = format_p_ci(
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+
+hu_motivation_pairs <- as.data.frame(
+  summary(
+    pairs(hu_motivation_overall, adjust = "holm"),
+    type = "response",
+    infer = TRUE
+  )
+) %>%
+  mutate(
+    OR_CI = format_or_ci(
+      odds.ratio,
+      asymp.LCL,
+      asymp.UCL
+    ),
+    p_display = format_p_value(p.value)
+  )
+```
+
+#### table combine
+
+```{r}
+table_hu <- tribble(
+  ~Comparison, ~`P [95% CI]`, ~`OR [95% CI]`, ~p,
+
+  "Structure", "", "", "",
+
+  "  Interindividual",
+  hu_structure_df$P_CI[
+    hu_structure_df$structure_number01 == "Interindividual"
+  ],
+  "", "",
+
+  "  Intergroup",
+  hu_structure_df$P_CI[
+    hu_structure_df$structure_number01 == "Intergroup"
+  ],
+  "", "",
+
+  "  Interindividual vs. Intergroup",
+  "",
+  hu_structure_pairs$OR_CI[1],
+  hu_structure_pairs$p_display[1],
+
+  "Motivation", "", "", "",
+
+  "  Proself",
+  hu_motivation_df$P_CI[
+    hu_motivation_df$motivation_number01 == "Proself"
+  ],
+  "", "",
+
+  "  Prosocial",
+  hu_motivation_df$P_CI[
+    hu_motivation_df$motivation_number01 == "Prosocial"
+  ],
+  "", "",
+
+  "  Proself vs. Prosocial",
+  "",
+  hu_motivation_pairs$OR_CI[1],
+  hu_motivation_pairs$p_display[1]
+)
+
+table_hu
+```
+
+#### save tables
+
+```{r}
+save_output_to_workbook(
+  wb,
+  "HC Follow-up Table",
+  table_hc
+)
+
+save_output_to_workbook(
+  wb,
+  "HU Follow-up Table",
+  table_hu
 )
 ```
 

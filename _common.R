@@ -691,7 +691,31 @@ format_stat <- function(x, p_value = FALSE) {
 
 
 
+format_p_ci <- function(prob, lower, upper) {
+  sprintf(
+    "%.2f [%.2f, %.2f]",
+    prob,
+    lower,
+    upper
+  )
+}
 
+format_or_ci <- function(or, lower, upper) {
+  sprintf(
+    "%.2f [%.2f, %.2f]",
+    or,
+    lower,
+    upper
+  )
+}
+
+format_p_value <- function(p) {
+  ifelse(
+    p < .001,
+    "< .001",
+    sprintf("%.3f", p)
+  )
+}
 
 # END --------------------------------------------------------------------------
 
