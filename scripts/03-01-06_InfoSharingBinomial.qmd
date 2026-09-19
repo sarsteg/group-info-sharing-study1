@@ -1270,6 +1270,22 @@ save_output_to_workbook(
 )
 ```
 
+#### Motivation \* Structure
+
+```{r}
+hu_cells <- emmeans(
+  model_binom,
+  ~ structure_number01 * motivation_number01,
+  at = list(
+    InfoImportance = "High Importance",
+    InfoDistribution = "Unique"
+  ),
+  type = "response"
+)
+
+hu_cells
+```
+
 ### Build table
 
 #### high Importance Common
@@ -1576,7 +1592,224 @@ save_output_to_workbook(
 )
 ```
 
-## Save to excel —————————————-
+### Build table
+
+#### dataframes
+
+```{r}
+hc_probability_df <- as.data.frame(hc_structure) %>%
+  mutate(
+    P_CI = format_p_ci(
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+```
+
+```{r}
+hu_probability_df <- as.data.frame(hu_cells) %>%
+  mutate(
+    P_CI = format_p_ci(
+      prob,
+      asymp.LCL,
+      asymp.UCL
+    )
+  )
+```
+
+```{r}
+table_high_probabilities <- tribble(
+  ~`Information Distribution`,
+  ~Motivation,
+  ~Interindividual,
+  ~Intergroup,
+
+  "Common",
+  "Proself",
+  hc_probability_df$P_CI[
+    hc_probability_df$structure_number01 == "Interindividual" &
+    hc_probability_df$motivation_number01 == "Proself"
+  ],
+  hc_probability_df$P_CI[
+    hc_probability_df$structure_number01 == "Intergroup" &
+    hc_probability_df$motivation_number01 == "Proself"
+  ],
+
+  "",
+  "Prosocial",
+  hc_probability_df$P_CI[
+    hc_probability_df$structure_number01 == "Interindividual" &
+    hc_probability_df$motivation_number01 == "Prosocial"
+  ],
+  hc_probability_df$P_CI[
+    hc_probability_df$structure_number01 == "Intergroup" &
+    hc_probability_df$motivation_number01 == "Prosocial"
+  ],
+
+  "Unique",
+  "Proself",
+  hu_probability_df$P_CI[
+    hu_probability_df$structure_number01 == "Interindividual" &
+    hu_probability_df$motivation_number01 == "Proself"
+  ],
+  hu_probability_df$P_CI[
+    hu_probability_df$structure_number01 == "Intergroup" &
+    hu_probability_df$motivation_number01 == "Proself"
+  ],
+
+  "",
+  "Prosocial",
+  hu_probability_df$P_CI[
+    hu_probability_df$structure_number01 == "Interindividual" &
+    hu_probability_df$motivation_number01 == "Prosocial"
+  ],
+  hu_probability_df$P_CI[
+    hu_probability_df$structure_number01 == "Intergroup" &
+    hu_probability_df$motivation_number01 == "Prosocial"
+  ]
+)
+
+table_high_probabilities
+```
+
+#### save table
+
+```{r}
+save_output_to_workbook(
+  wb,
+  "High Importance Probabilities",
+  table_high_probabilities
+)
+```
+
+### Build table 
+
+#### dataframes
+
+```{r}
+hu_structure_pairs <- as.data.frame(
+  summary(
+    pairs(hu_structure, adjust = "holm"),
+    type = "response",
+    infer = TRUE
+  )
+) %>%
+  mutate(
+    OR_CI = format_or_ci(
+      odds.ratio,
+      asymp.LCL,
+      asymp.UCL
+    ),
+    p_display = format_p_value(p.value)
+  )
+```
+
+```{r}
+hu_motivation_pairs <- as.data.frame(
+  summary(
+    pairs(hu_motivation, adjust = "holm"),
+    type = "response",
+    infer = TRUE
+  )
+) %>%
+  mutate(
+    OR_CI = format_or_ci(
+      odds.ratio,
+      asymp.LCL,
+      asymp.UCL
+    ),
+    p_display = format_p_value(p.value)
+  )
+```
+
+```{r}
+table_high_pairs <- tribble(
+  ~Comparison, ~`OR [95% CI]`, ~p,
+
+  "Common", "", "",
+
+  "  Proself: Interindividual vs. Intergroup",
+  hc_structure_pairs$OR_CI[
+    hc_structure_pairs$motivation_number01 == "Proself"
+  ],
+  hc_structure_pairs$p_display[
+    hc_structure_pairs$motivation_number01 == "Proself"
+  ],
+
+  "  Prosocial: Interindividual vs. Intergroup",
+  hc_structure_pairs$OR_CI[
+    hc_structure_pairs$motivation_number01 == "Prosocial"
+  ],
+  hc_structure_pairs$p_display[
+    hc_structure_pairs$motivation_number01 == "Prosocial"
+  ],
+
+  "  Interindividual: Proself vs. Prosocial",
+  hc_motivation_pairs$OR_CI[
+    hc_motivation_pairs$structure_number01 == "Interindividual"
+  ],
+  hc_motivation_pairs$p_display[
+    hc_motivation_pairs$structure_number01 == "Interindividual"
+  ],
+
+  "  Intergroup: Proself vs. Prosocial",
+  hc_motivation_pairs$OR_CI[
+    hc_motivation_pairs$structure_number01 == "Intergroup"
+  ],
+  hc_motivation_pairs$p_display[
+    hc_motivation_pairs$structure_number01 == "Intergroup"
+  ],
+
+  "Unique", "", "",
+
+  "  Proself: Interindividual vs. Intergroup",
+  hu_structure_pairs$OR_CI[
+    hu_structure_pairs$motivation_number01 == "Proself"
+  ],
+  hu_structure_pairs$p_display[
+    hu_structure_pairs$motivation_number01 == "Proself"
+  ],
+
+  "  Prosocial: Interindividual vs. Intergroup",
+  hu_structure_pairs$OR_CI[
+    hu_structure_pairs$motivation_number01 == "Prosocial"
+  ],
+  hu_structure_pairs$p_display[
+    hu_structure_pairs$motivation_number01 == "Prosocial"
+  ],
+
+  "  Interindividual: Proself vs. Prosocial",
+  hu_motivation_pairs$OR_CI[
+    hu_motivation_pairs$structure_number01 == "Interindividual"
+  ],
+  hu_motivation_pairs$p_display[
+    hu_motivation_pairs$structure_number01 == "Interindividual"
+  ],
+
+  "  Intergroup: Proself vs. Prosocial",
+  hu_motivation_pairs$OR_CI[
+    hu_motivation_pairs$structure_number01 == "Intergroup"
+  ],
+  hu_motivation_pairs$p_display[
+    hu_motivation_pairs$structure_number01 == "Intergroup"
+  ]
+)
+
+table_high_pairs
+```
+
+#### save table
+
+```{r}
+save_output_to_workbook(
+  wb,
+  "High Importance Pairwise",
+  table_high_pairs
+)
+```
+
+## Save wb to excel —————————————-
 
 ```{r}
 data.frame(
