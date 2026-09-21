@@ -376,6 +376,16 @@ controls_binomial
 save_output_to_workbook(wb, "Control Variables", controls_binomial)
 ```
 
+### likelihood
+
+```{r}
+# confint(
+#   model_controls,
+#   parm = "beta_",
+#   method = "profile"
+# )
+```
+
 ### interpretation
 
 Only sex and need for cognition were significant. Therefore, only these two control variables are kept in the full model.
