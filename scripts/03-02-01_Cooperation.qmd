@@ -18,6 +18,9 @@ library(yarrr)
 library(ggplot2)
 library(car)
 library(dplyr)
+library(broom)
+library(gt)
+library(openxlsx2)
 ```
 
 ## 2. SELF-REPORT STATE COOPERATION
@@ -277,6 +280,82 @@ state_model <- lm(Manipulation_Mean ~ (structure_number01 * motivation_number01)
 
 # Summary of results
 summary(state_model)
+```
+
+```{r}
+confint(state_model, level = 0.95)
+```
+
+```{r}
+broom::tidy(
+  state_model,
+  conf.int = TRUE,
+  conf.level = 0.95
+)
+```
+
+```{r}
+reg_table <- tidy(
+  state_model,
+  conf.int = TRUE,
+  conf.level = .95
+) %>%
+  mutate(
+    Predictor = case_when(
+      term == "(Intercept)" ~ "Intercept",
+      term == "DirtyDozen_Machiavellianism" ~ "Machiavellianism",
+      term == "structure_number01" ~ "Structure",
+      term == "motivation_number01" ~ "Motivation",
+      term == "structure_number01:motivation_number01" ~
+        "Structure × Motivation",
+      TRUE ~ term
+    ),
+
+    Estimate = sprintf("%.2f", estimate),
+    SE = sprintf("%.2f", std.error),
+
+    `95% CI` = paste0(
+      "[",
+      sprintf("%.2f", conf.low),
+      ", ",
+      sprintf("%.2f", conf.high),
+      "]"
+    ),
+
+    p = case_when(
+      p.value < .001 ~ "< .001",
+      TRUE ~ sub("^0", "", sprintf("%.3f", p.value))
+    )
+  ) %>%
+  select(
+    Predictor,
+    Estimate,
+    SE,
+    `95% CI`,
+    p
+  )
+
+reg_table
+```
+
+```{r}
+wb <- createWorkbook()
+
+sheet_name <- "Cooperation Results"
+
+addWorksheet(wb, sheet_name)
+
+writeDataTable(
+  wb,
+  sheet = sheet_name,
+  x = reg_table
+)
+
+saveWorkbook(
+  wb,
+  "../tables/cooperation_regression.xlsx",
+  overwrite = TRUE
+)
 ```
 
 ###### cook's
