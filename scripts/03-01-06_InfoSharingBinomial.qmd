@@ -748,7 +748,7 @@ joint_panels_table
 ```
 
 | Information condition | Structure | Motivation | Structure × Motivation | What it means |
-|---------------|---------------|---------------|---------------|---------------|
+|----|----|----|----|----|
 | **High, Common** | .869 | **\< .001** | **\< .001** | The effect of structure depends on motivation. Unpack with simple interactions. |
 | **High, Unique** | **.004** | **\< .001** | .246 | Structure and motivation both have significant effects, with [no]{.underline} evidence that their effects depend on one another. |
 | **Low, Common** | .273 | .185 | .110 | [No]{.underline} significant effects of structure, motivation, or their interaction. |
@@ -1693,7 +1693,7 @@ save_output_to_workbook(
 )
 ```
 
-### Build table 
+### Build table
 
 #### dataframes
 
