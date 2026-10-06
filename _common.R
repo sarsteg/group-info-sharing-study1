@@ -642,14 +642,19 @@ save_figure_to_workbook <- function(
 
 
 
+# Half-up rounding helper
+round_half_up <- function(value, digits) {
+  z <- 10^digits
+  sign(value) * floor(abs(value) * z + 0.5) / z
+}
+
+
+
+
+# Formatting for p values included
 format_stat <- function(x, p_value = FALSE) {
   
-  # Half-up rounding helper
-  round_half_up <- function(value, digits) {
-    z <- 10^digits
-    sign(value) * floor(abs(value) * z + 0.5) / z
-  }
-  
+
   if (p_value) {
     
     rounded_2 <- round_half_up(x, 2)
@@ -694,18 +699,18 @@ format_stat <- function(x, p_value = FALSE) {
 format_p_ci <- function(prob, lower, upper) {
   sprintf(
     "%.2f [%.2f, %.2f]",
-    prob,
-    lower,
-    upper
+    round_half_up(prob, 2),
+    round_half_up(lower, 2),
+    round_half_up(upper, 2)
   )
 }
 
 format_or_ci <- function(or, lower, upper) {
   sprintf(
     "%.2f [%.2f, %.2f]",
-    or,
-    lower,
-    upper
+    round_half_up(or, 2),
+    round_half_up(lower, 2),
+    round_half_up(upper, 2)
   )
 }
 

@@ -339,23 +339,18 @@ reg_table
 ```
 
 ```{r}
-wb <- createWorkbook()
-
 sheet_name <- "Cooperation Results"
 
-addWorksheet(wb, sheet_name)
+wb <- wb_workbook()
 
-writeDataTable(
-  wb,
+wb$add_worksheet(sheet_name)
+
+wb$add_data_table(
   sheet = sheet_name,
   x = reg_table
 )
 
-saveWorkbook(
-  wb,
-  "../tables/cooperation_regression.xlsx",
-  overwrite = TRUE
-)
+wb$save("../tables/cooperation_regression.xlsx")
 ```
 
 ###### cook's

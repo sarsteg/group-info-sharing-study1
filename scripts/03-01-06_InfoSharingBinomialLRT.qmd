@@ -103,6 +103,12 @@ control_data <- control_data %>%
   )
 ```
 
+build labels
+
+```{r}
+
+```
+
 ## control model ———————————————————————
 
 ```{r}
@@ -648,28 +654,27 @@ table_control_model <- term_map %>%
 ```{r}
 table_control_model <- table_control_model %>%
   mutate(
-    Estimate = sprintf("%.2f", Estimate),
-    SE = sprintf("%.2f", SE),
-
+    
+    Estimate = format_stat(Estimate),
+    
+    SE = format_stat(SE),
+    
     LR_Chisq = case_when(
       Predictor == "Intercept" ~ "—",
-      is.na(LR_Chisq) ~ "",
-      TRUE ~ sprintf("%.2f", LR_Chisq)
+      TRUE ~ format_stat(LR_Chisq)
     ),
-
+    
     p = case_when(
       Predictor == "Intercept" ~ "—",
-      is.na(p) ~ "",
-      p < .001 ~ "< .001",
-      TRUE ~ sub("^0", "", sprintf("%.3f", p))
+      TRUE ~ format_stat(p, p_value = TRUE)
     ),
-
-    OR_CI = sprintf(
-      "%.2f [%.2f, %.2f]",
+    
+    OR_CI = format_or_ci(
       OR,
       CI_low,
       CI_high
     )
+    
   ) %>%
   select(
     Predictor,
@@ -849,24 +854,21 @@ table_full_model <- term_map %>%
 ```{r}
 table_full_model <- table_full_model %>%
   mutate(
-    Estimate = sprintf("%.2f", Estimate),
-    SE = sprintf("%.2f", SE),
+    Estimate = format_stat(Estimate),
+    
+    SE = format_stat(SE),
 
     LR_Chisq = case_when(
       Predictor == "Intercept" ~ "—",
-      is.na(LR_Chisq) ~ "",
-      TRUE ~ sprintf("%.2f", LR_Chisq)
+      TRUE ~ format_stat(LR_Chisq)
     ),
 
     p = case_when(
       Predictor == "Intercept" ~ "—",
-      is.na(p) ~ "",
-      p < .001 ~ "< .001",
-      TRUE ~ sub("^0", "", sprintf("%.3f", p))
+      TRUE ~ format_stat(p, p_value = TRUE)
     ),
 
-    OR_CI = sprintf(
-      "%.2f [%.2f, %.2f]",
+    OR_CI = format_or_ci(
       OR,
       CI_low,
       CI_high

@@ -1,0 +1,324 @@
+---
+title: "02_03_InfoSharingBx"
+format: html
+---
+
+## load the data
+
+```{r}
+library(dplyr)
+library(tidyr)
+gee_long_all_bx <- readRDS("../artifacts/gee_long_all_bx.rds")
+```
+
+verify data
+
+```{r}
+names(gee_long_all_bx)
+```
+
+```{r}
+unique(gee_long_all_bx$structure)
+unique(gee_long_all_bx$motivation)
+unique(gee_long_all_bx$InfoType)
+unique(gee_long_all_bx$InfoImportance)
+unique(gee_long_all_bx$Behavior)
+
+table(gee_long_all_bx$Behavior, useNA = "ifany")
+```
+
+```{r}
+summary(gee_long_all_bx$Count)
+
+table(gee_long_all_bx$Count, useNA = "ifany")
+```
+
+\
+
+```{r}
+participant_behavior_props <- gee_long_all_bx %>%
+  group_by(
+    ResponseId,
+    structure,
+    motivation,
+    InfoType,
+    InfoImportance
+  ) %>%
+  mutate(
+    TotalClues = sum(Count),
+    Proportion = Count / TotalClues
+  ) %>%
+  ungroup()
+```
+
+verify
+
+correct number of clues per participant, 3 in each category
+
+```{r}
+participant_behavior_props %>%
+  distinct(
+    ResponseId,
+    structure,
+    motivation,
+    InfoType,
+    InfoImportance,
+    TotalClues
+  ) %>%
+  count(
+    InfoType,
+    InfoImportance,
+    TotalClues
+  ) %>%
+  arrange(
+    InfoType,
+    InfoImportance,
+    TotalClues
+  )
+```
+
+proportions sum to 1
+
+```{r}
+participant_behavior_props %>%
+  group_by(
+    ResponseId,
+    InfoType,
+    InfoImportance
+  ) %>%
+  summarise(
+    TotalProportion = sum(Proportion),
+    .groups = "drop"
+  ) %>%
+  count(TotalProportion)
+```
+
+descriptive stats
+
+```{r}
+behavior_summary <- participant_behavior_props %>%
+  group_by(
+    InfoType,
+    InfoImportance,
+    structure,
+    motivation,
+    Behavior
+  ) %>%
+  summarise(
+    n = n(),
+    M = mean(Proportion, na.rm = TRUE),
+    SD = sd(Proportion, na.rm = TRUE),
+    .groups = "drop"
+  )
+```
+
+format
+
+```{r}
+behavior_table <- behavior_summary %>%
+  mutate(
+    `M (SD)` = sprintf("%.2f (%.2f)", M, SD)
+  ) %>%
+  select(
+    InfoType,
+    InfoImportance,
+    structure,
+    motivation,
+    Behavior,
+    `M (SD)`
+  ) %>%
+  pivot_wider(
+    names_from = Behavior,
+    values_from = `M (SD)`
+  )
+```
+
+```{r}
+behavior_table <- behavior_summary %>%
+  mutate(
+    InfoType = recode(
+      InfoType,
+      "public" = "Public",
+      "private" = "Private"
+    ),
+    InfoImportance = recode(
+      InfoImportance,
+      "more" = "More Important",
+      "less" = "Less Important"
+    ),
+    structure = recode(
+      structure,
+      "individual" = "Interindividual",
+      "group" = "Intergroup"
+    ),
+    motivation = recode(
+      motivation,
+      "proself" = "Proself",
+      "prosocial" = "Prosocial"
+    ),
+    Behavior = recode(
+      Behavior,
+      "shared" = "Shared",
+      "withheld" = "Withheld",
+      "distort" = "Distorted"
+    ),
+    `M (SD)` = sprintf("%.2f (%.2f)", M, SD)
+  ) %>%
+  select(
+    InfoType,
+    InfoImportance,
+    structure,
+    motivation,
+    Behavior,
+    `M (SD)`
+  ) %>%
+  pivot_wider(
+    names_from = Behavior,
+    values_from = `M (SD)`
+  )
+
+behavior_table
+```
+
+sorted
+
+```{r}
+behavior_table_sorted <- behavior_summary %>%
+  mutate(
+    structure = recode(
+      structure,
+      "group" = "Intergroup",
+      "individual" = "Interindividual"
+    ),
+    motivation = recode(
+      motivation,
+      "proself" = "Proself",
+      "prosocial" = "Prosocial"
+    ),
+    InfoType = recode(
+      InfoType,
+      "public" = "Common",
+      "private" = "Unique"
+    ),
+    InfoImportance = recode(
+      InfoImportance,
+      "less" = "Low",
+      "more" = "High"
+    ),
+    Behavior = recode(
+      Behavior,
+      "shared" = "Share",
+      "withheld" = "Withhold",
+      "distort" = "Distort"
+    ),
+
+    Condition = paste(structure, motivation, sep = ", "),
+
+    Condition = factor(
+      Condition,
+      levels = c(
+        "Intergroup, Proself",
+        "Intergroup, Prosocial",
+        "Interindividual, Proself",
+        "Interindividual, Prosocial"
+      )
+    ),
+
+    InfoType = factor(
+      InfoType,
+      levels = c("Common", "Unique")
+    ),
+
+    InfoImportance = factor(
+      InfoImportance,
+      levels = c("Low", "High")
+    ),
+
+    `M (SD)` = sprintf("%.2f (%.2f)", M, SD)
+  )
+```
+
+```{r}
+names(behavior_table_sorted)
+```
+
+```{r}
+unique(behavior_table_sorted$Behavior)
+```
+
+```{r}
+behavior_table_sorted <- behavior_table_sorted %>%
+  mutate(
+    InformationType = paste(InfoType, InfoImportance, sep = ", ")
+  ) %>%
+  select(
+    Condition,
+    InfoType,
+    InfoImportance,
+    InformationType,
+    Behavior,
+    `M (SD)`
+  ) %>%
+  pivot_wider(
+    names_from = Behavior,
+    values_from = `M (SD)`
+  ) %>%
+  arrange(
+    Condition,
+    InfoType,
+    InfoImportance
+  ) %>%
+  select(
+    Condition,
+    InformationType,
+    Share,
+    Withhold,
+    Distort
+  )
+```
+
+```{r}
+condition_n <- participant_behavior_props %>%
+  distinct(
+    ResponseId,
+    structure,
+    motivation
+  ) %>%
+  mutate(
+    structure = recode(
+      structure,
+      "group" = "Intergroup",
+      "individual" = "Interindividual"
+    ),
+    motivation = recode(
+      motivation,
+      "proself" = "Proself",
+      "prosocial" = "Prosocial"
+    ),
+    Condition = paste(structure, motivation, sep = ", ")
+  ) %>%
+  count(
+    Condition,
+    name = "n"
+  )
+```
+
+```{r}
+behavior_table_sorted <- behavior_table_sorted %>%
+  left_join(
+    condition_n,
+    by = "Condition"
+  ) %>%
+  select(
+    Condition,
+    n,
+    InformationType,
+    Share,
+    Withhold,
+    Distort
+  )
+```
+
+```{r}
+behavior_table_sorted
+```
