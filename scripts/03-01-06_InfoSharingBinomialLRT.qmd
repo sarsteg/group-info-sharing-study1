@@ -20,6 +20,7 @@ library(afex)
 library(lme4)
 library(emmeans)
 library(papaja)
+library(DHARMa)
 
 # library(glmmTMB)
 # library(modelsummary)
@@ -199,11 +200,60 @@ model_binom_lrt <- mixed(
 ```
 
 ```{r}
+# Check factor levels and contrast coding
+levels(full_model_data$motivation_number01)
+
+contrasts(
+  model_binom_lrt$full_model@frame$motivation_number01
+)
+
+# Check the estimated coefficients
+fixef(model_binom_lrt$full_model)[
+  grepl("motivation", names(fixef(model_binom_lrt$full_model)))
+]
+```
+
+```{r}
 model_binom_lrt
 ```
 
 ```{r}
 anova(model_binom_lrt)
+```
+
+#### assumptions
+
+```{r}
+# Extract fitted model
+model <- model_binom_lrt$full_model
+
+# 1. Convergence
+summary(model)
+model@optinfo$conv
+
+# 2. Singular fit
+lme4::isSingular(model)
+lme4::VarCorr(model)
+
+# 3. Simulated residual diagnostics
+sim_res <- simulateResiduals(
+  fittedModel = model,
+  n = 1000
+)
+
+plot(sim_res)
+
+# 4. Overdispersion
+testDispersion(sim_res)
+
+# 5. Residual uniformity
+testUniformity(sim_res)
+
+# 6. Residual outliers
+testOutliers(sim_res)
+
+# 7. Multicollinearity
+performance::check_collinearity(model)
 ```
 
 ### four panel comparisons
